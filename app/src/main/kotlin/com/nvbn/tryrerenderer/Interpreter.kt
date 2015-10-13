@@ -54,7 +54,6 @@ class Interpreter {
         val currentCallId = callId
 
         val actions = script.map { line ->
-            Log.d(TAG, line.toString())
             when (line.get(0)) {
                 ":new" -> New(
                         line.get(1) as String,
@@ -64,7 +63,7 @@ class Interpreter {
                         line.get(1) as String,
                         line.get(2) as String,
                         line.get(3) as String,
-                        toVarsOrVals(line.get(3)))
+                        toVarsOrVals(line.get(4)))
                 ":get" -> Get(
                         line.get(1) as String,
                         line.get(2) as String,
@@ -78,7 +77,11 @@ class Interpreter {
                 throw Stopped()
             interpeteLine(vars, action)
         })
-        return vars.get(rootId) as Bitmap
+        val root = vars.get(rootId)
+        return when (root) {
+            is Bitmap -> root
+            else -> throw Exception("Root should be instance of Bitmap, not $root")
+        }
     }
 
     fun prepareArg(vars: Map<String, Any?>, arg: VarOrVal): Any? = when (arg) {
@@ -94,7 +97,7 @@ class Interpreter {
     fun interpeteLine(vars: Map<String, Any?>, line: Command): Map<String, Any?> {
         return when (line) {
             is New -> vars.plus(line.resultVar to doNew(
-                    vars, line.cls, line.args))
+                    vars, line.cls, prepareArgs(vars, line.args)))
             is Call -> vars.plus(line.resultVar to doCall(
                     vars, vars.getOrElse(line.objVar, { -> line.objVar }),
                     line.method, prepareArgs(vars, line.args)))
