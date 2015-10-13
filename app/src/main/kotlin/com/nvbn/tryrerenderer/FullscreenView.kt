@@ -47,7 +47,9 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
                         0.toFloat(), 0.toFloat(),
                         surfaceWidth.toFloat(), surfaceHeight.toFloat(),
                         paint)
-                canvas.drawBitmap(rootBitmap, 0.toFloat(), 0.toFloat(), paint)
+                val scaledBitmap = Bitmap.createScaledBitmap(
+                        rootBitmap, surfaceWidth, surfaceHeight, true)
+                canvas.drawBitmap(scaledBitmap, 0.toFloat(), 0.toFloat(), paint)
             } finally {
                 holder!!.unlockCanvasAndPost(canvas)
             }
