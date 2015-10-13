@@ -634,6 +634,7 @@ fun doCall(vars: Map<String, Any?>, objVar: Any?, method: String, args: List<Any
     (objVar == "Shader\$TileMode" && method == "values" && args.count() == 0 ) -> Shader.TileMode.values()
     (objVar == "Path\$Direction" && method == "valueOf" && args.count() == 1  && args.get(0) is String) -> Path.Direction.valueOf(args.get(0) as String)
     (objVar == "Path\$Direction" && method == "values" && args.count() == 0 ) -> Path.Direction.values()
+    (objVar == "RerendererLoader" && method == "bitmapFromUrl" && args.count() == 1 && args.get(0) is String) -> RerendererLoader.bitmapFromUrl(args.get(0) as String)
     else -> throw Exception("Can't call ${method}")
 }
 
