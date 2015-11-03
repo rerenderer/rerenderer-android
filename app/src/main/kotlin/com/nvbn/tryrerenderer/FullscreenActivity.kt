@@ -16,7 +16,8 @@ public class FullscreenActivity : Activity() {
         val view = FullscreenView(ctx)
         setContentView(view)
 
-        val interop = Interop(getHost(),
+        val interop = Interop(
+                "file:///android_asset/index.html",
                 { script, rootId ->
                     try {
                         view.render(interpreter.call(script, rootId))
@@ -27,18 +28,5 @@ public class FullscreenActivity : Activity() {
                 },
                 ctx)
         view.propagate = { x -> interop.sendEvent(x) }
-    }
-
-    fun getHost(): String {
-        var host = "http://nvbn-XPS13-9333.local:3449"
-        alert("Enter host name:") {
-            customView {
-                val edit = editText(host)
-                positiveButton("Ok") {
-                    host = edit.getText().toString()
-                }
-            }
-        }.show()
-        return host
     }
 }

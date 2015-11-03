@@ -8,13 +8,13 @@ import com.cognitect.transit.Keyword
 import com.cognitect.transit.Symbol
 
 // Vars
-open data class VarOrVal()
+open class VarOrVal()
 
-data class Var(val id: String) : VarOrVal() {
+class Var(val id: String) : VarOrVal() {
     fun toVal(vars: Map<String, Any?>) = Val(vars.get(id))
 }
 
-data class Val(val value: Any?) : VarOrVal()
+class Val(val value: Any?) : VarOrVal()
 
 fun varToVal(vars: Map<String, Any?>, x: VarOrVal): Any? = when (x) {
     is Var -> Val(vars.get(x.id))
@@ -30,16 +30,16 @@ fun toVarsOrVals(xs: Any): List<VarOrVal> = (xs as List<List<*>>).map { x ->
     }
 }
 
-open data class Command()
+open class Command()
 
-data class New(val resultVar: String, val cls: String, val args: List<VarOrVal>) : Command()
+class New(val resultVar: String, val cls: String, val args: List<VarOrVal>) : Command()
 
-data class Call(val resultVar: String, val objVar: String, val method: String,
-                val args: List<VarOrVal>) : Command()
+class Call(val resultVar: String, val objVar: String, val method: String,
+           val args: List<VarOrVal>) : Command()
 
-data class Get(val resultVar: String, val objVar: String, val attr: String) : Command()
+class Get(val resultVar: String, val objVar: String, val attr: String) : Command()
 
-data class Free(val objVar: String) : Command()
+class Free(val objVar: String) : Command()
 
 
 class Stopped : Exception()

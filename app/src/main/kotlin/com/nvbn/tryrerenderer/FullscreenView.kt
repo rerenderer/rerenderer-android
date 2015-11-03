@@ -2,11 +2,9 @@ package com.nvbn.tryrerenderer
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.Log
 import android.view.*
-import org.jetbrains.anko.holder
 
 class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
         View.OnTouchListener {
@@ -16,7 +14,9 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     val TAG = "FULLSCREEN_VIEW"
     var surfaceWidth = 0
     var surfaceHeight = 0
-    var propagate = {(x: Map<String, Any>) -> Unit}
+    var propagate: (event: Map<String, Any>) -> Unit = { event ->
+        Log.d(TAG, "Event bus not ready, skip $event")
+    }
 
     init {
         getHolder().addCallback(this)
@@ -58,10 +58,9 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        propagate(mapOf(
-                "type" to "touch",
-                "x" to event.getX(),
-                "y" to event.getY()))
+        propagate(mapOf("type" to "click",
+                "x" to event.x,
+                "y" to event.y))
         return true
     }
 }

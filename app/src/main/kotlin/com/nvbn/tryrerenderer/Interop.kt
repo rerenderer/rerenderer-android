@@ -10,9 +10,11 @@ import com.cognitect.transit.Writer
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
-class Interop(url: String, val onCall: (data: Collection<List<Any>>, rootId: String) -> Unit,
+class Interop(url: String,
+              val onCall: (data: Collection<List<Any>>, rootId: String) -> Unit,
               context: Context) : WebView(context) {
     val TAG = "INTEROP"
+    var callbacks = mapOf<String, String>()
 
     inner class JSInterface {
         @JavascriptInterface
@@ -22,8 +24,9 @@ class Interop(url: String, val onCall: (data: Collection<List<Any>>, rootId: Str
         }
 
         @JavascriptInterface
-        fun listen(event: String, callback: Any) {
-            Log.d(TAG, callback.toString())
+        fun listen(event: String, callback: String) {
+            Log.d(TAG, "Start listening $event")
+            callbacks = callbacks.plus(event to callback)
         }
 
         @JavascriptInterface
@@ -62,7 +65,10 @@ class Interop(url: String, val onCall: (data: Collection<List<Any>>, rootId: Str
 
     fun sendEvent(event: Map<String, Any>) {
         val serialised = serialise(event)
-        evaluateJavascript("onAndroidEvent($serialised);",
-                { result -> Log.d(TAG, result) })
+        val callback = callbacks.getRaw(event.getRaw("type"))
+        if (callback is String) {
+            evaluateJavascript("$callback('$serialised')",
+                    { result -> Log.d(TAG, result) })
+        }
     }
 }
