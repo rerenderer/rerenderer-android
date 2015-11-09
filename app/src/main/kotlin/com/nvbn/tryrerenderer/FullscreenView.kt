@@ -21,6 +21,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     init {
         holder.addCallback(this)
         paint.setARGB(255, 0, 0, 0)
+        setOnTouchListener(this)
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
@@ -59,6 +60,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        Log.d(TAG, "Touch $event")
         propagate(mapOf("type" to "click",
                 "x" to event.x,
                 "y" to event.y))

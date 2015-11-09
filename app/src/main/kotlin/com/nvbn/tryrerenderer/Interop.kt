@@ -52,7 +52,7 @@ class Interop(url: String,
         val writer: Writer<Any> = TransitFactory.writer(
                 TransitFactory.Format.JSON, baos)
         writer.write(data)
-        return writer.toString()
+        return baos.toString()
     }
 
     fun deserialise(data: String): Collection<List<Any>> {
