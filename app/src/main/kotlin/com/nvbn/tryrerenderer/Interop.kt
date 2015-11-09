@@ -38,12 +38,10 @@ class Interop(url: String,
 
     init {
         setWillNotDraw(true)
-        val settings = getSettings()
         settings.setAppCacheEnabled(false)
-        settings.setAppCacheEnabled(false)
-        settings.setCacheMode(WebSettings.LOAD_NO_CACHE)
-        settings.setJavaScriptEnabled(true)
-        settings.setDefaultTextEncodingName("utf-8")
+        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        settings.javaScriptEnabled = true
+        settings.defaultTextEncodingName = "utf-8"
         val jsInterface = JSInterface()
         addJavascriptInterface(jsInterface, "android")
         loadUrl(url)
@@ -64,11 +62,12 @@ class Interop(url: String,
     }
 
     fun sendEvent(event: Map<String, Any>) {
+        Log.d(TAG, "Send event $event")
         val serialised = serialise(event)
         val callback = callbacks.getRaw(event.getRaw("type"))
         if (callback is String) {
-            evaluateJavascript("$callback('$serialised')",
-                    { result -> Log.d(TAG, result) })
+            evaluateJavascript("document['$callback']('$serialised')",
+                    { Log.d(TAG, it) })
         }
     }
 }

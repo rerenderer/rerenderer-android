@@ -19,12 +19,13 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     init {
-        getHolder().addCallback(this)
+        holder.addCallback(this)
         paint.setARGB(255, 0, 0, 0)
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         Log.d(TAG, "Surface created")
+        RerendererLoader.context = context
         render(lastRoot)
     }
 
