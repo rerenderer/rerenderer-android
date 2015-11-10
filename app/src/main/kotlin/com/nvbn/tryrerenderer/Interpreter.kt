@@ -107,9 +107,8 @@ class Interpreter {
     }
 
     fun interpeteLine(vars: Map<String, Any?>, it: Command): Map<String, Any?> = when (it) {
-        is New -> vars.plus(it.resultVar to newMap[
-                NewGroup(it.cls, it.args.count())
-        ]!!(prepareArgs(vars, it.args)))
+        is New -> vars.plus(it.resultVar to new(
+                it.cls, prepareArgs(vars, it.args)))
         is Call -> vars.plus(it.resultVar to doCall(
                 vars, vars.getOrElse(it.objVar, { -> it.objVar }),
                 it.method, prepareArgs(vars, it.args)))
