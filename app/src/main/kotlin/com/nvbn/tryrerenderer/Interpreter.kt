@@ -42,14 +42,23 @@ class Get(val resultVar: String, val objVar: String, val attr: String) : Command
 class Free(val objVar: String) : Command()
 
 
+data class NewGroup(val cls: String, val argsCount: Int)
+
+data class CallGroup(val objVarType: Class<Any>, val method: String, val argsCount: Int)
+
+data class GetGroup(val objVar: String, val attr: String)
+
+
 class Stopped : Exception()
 
 class Interpreter {
     val TAG = "INTERPRETE"
     var callId = 0
     var vars = mapOf<String, Any?>()
+    val newMap = getNewMap()
 
     fun call(script: Collection<List<Any>>, rootId: String): Bitmap {
+        val start = System.currentTimeMillis()
         callId += 1
         val currentCallId = callId
 
@@ -78,6 +87,9 @@ class Interpreter {
             interpeteLine(vars, action)
         })
         val root = vars[rootId]
+
+        Log.d(TAG, "Took ${System.currentTimeMillis() - start}")
+
         return when (root) {
             is Bitmap -> root
             else -> throw Exception("Root should be instance of Bitmap, not $root")
@@ -94,15 +106,16 @@ class Interpreter {
         prepareArg(vars, arg)
     }
 
-    fun interpeteLine(vars: Map<String, Any?>, line: Command): Map<String, Any?> = when (line) {
-        is New -> vars.plus(line.resultVar to doNew(
-                vars, line.cls, prepareArgs(vars, line.args)))
-        is Call -> vars.plus(line.resultVar to doCall(
-                vars, vars.getOrElse(line.objVar, { -> line.objVar }),
-                line.method, prepareArgs(vars, line.args)))
-        is Get -> vars.plus(line.resultVar to doGet(
-                vars, line.objVar, line.attr))
-        is Free -> vars.minus(line.objVar)
+    fun interpeteLine(vars: Map<String, Any?>, it: Command): Map<String, Any?> = when (it) {
+        is New -> vars.plus(it.resultVar to newMap[
+                NewGroup(it.cls, it.args.count())
+        ]!!(prepareArgs(vars, it.args)))
+        is Call -> vars.plus(it.resultVar to doCall(
+                vars, vars.getOrElse(it.objVar, { -> it.objVar }),
+                it.method, prepareArgs(vars, it.args)))
+        is Get -> vars.plus(it.resultVar to doGet(
+                vars, it.objVar, it.attr))
+        is Free -> vars.minus(it.objVar)
         else -> vars
     }
 
