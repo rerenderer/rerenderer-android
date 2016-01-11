@@ -28,23 +28,25 @@ android {
 }
 
 buildscript {
-    ext.kotlin_version = '1.0.0-beta-1103'
+    ext.kotlin_version = '1.0.0-beta-4584'
+    ext.anko_version = '0.8.1'
+    ext.transit_version = '0.8.311'
+
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.3.0'
+        classpath 'com.android.tools.build:gradle:1.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-//        classpath 'org.jetbrains.kotlin:kotlin-android-extensions:0.12.1230'
     }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.cognitect:transit-java:0.8.290'
+    compile "com.cognitect:transit-java:$transit_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'org.jetbrains.anko:anko-sdk15:0.7.2'
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "org.jetbrains.anko:anko-sdk15:$anko_version"
 }
 repositories {
     mavenCentral()
