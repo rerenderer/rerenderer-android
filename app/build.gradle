@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 15
     buildToolsVersion '22.0.1'
 
     defaultConfig {
         applicationId "com.nvbn.tryrerenderer"
-        minSdkVersion 23
-        targetSdkVersion 23
+        minSdkVersion 15
+        targetSdkVersion 15
         versionCode 1
         versionName "1.0"
     }
@@ -41,11 +41,10 @@ buildscript {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:support-v4:23.0.0'
     compile 'com.cognitect:transit-java:0.8.290'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'org.jetbrains.anko:anko-sdk23:0.7.2'
-    compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
+    compile 'org.jetbrains.anko:anko-sdk15:0.7.2'
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 }
 repositories {
     mavenCentral()
