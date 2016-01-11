@@ -1,122 +1,107 @@
 package com.nvbn.tryrerenderer
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Path
-import android.util.Log
-import com.cognitect.transit.Keyword
-import com.cognitect.transit.Symbol
+import kotlin.reflect.KClass
 
-// Vars
-open class VarOrVal()
+/**
+ * Accessor to variable in pool.
+ */
+abstract class Variable {
+    abstract fun get(pool: Map<String, Any?>): Any?
 
-class Var(val id: String) : VarOrVal() {
-    fun toVal(vars: Map<String, Any?>) = Val(vars.get(id))
-}
+    class Reference(private val ref: String) : Variable() {
+        override fun get(pool: Map<String, Any?>) = pool[ref]
+    }
 
-class Val(val value: Any?) : VarOrVal()
-
-fun varToVal(vars: Map<String, Any?>, x: VarOrVal): Any? = when (x) {
-    is Var -> Val(vars.get(x.id))
-    is Val -> x
-    else -> throw Exception("Can't unpack $x")
-}
-
-fun toVarsOrVals(xs: Any): List<VarOrVal> = (xs as List<List<*>>).map { x ->
-    when (x.get(0)) {
-        ":var" -> Var(x.get(1) as String)
-        ":val" -> Val(x.get(1))
-        else -> throw Exception("Unknown variable definition $x")
+    class Value(private val value: Any?) : Variable() {
+        override fun get(pool: Map<String, Any?>) = value
     }
 }
 
-open class Command()
+/**
+ * Rerenderer script command.
+ */
+abstract class Command {
+    abstract fun interprete(pool: Map<String, Any?>): Map<String, Any?>
 
-class New(val resultVar: String, val cls: String, val args: List<VarOrVal>) : Command()
+    fun List<Variable>.getAll(pool: Map<String, Any?>) = map { it.get(pool)!! }
 
-class Call(val resultVar: String, val objVar: String, val method: String,
-           val args: List<VarOrVal>) : Command()
+    class New(private val resultRef: String, private val cls: Variable,
+              private val args: List<Variable>) : Command() {
+        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+            val cls = cls.get(pool)
+            if (cls !is KClass<*>) throw Exception("Can't create instance of $cls")
+            return pool.plus(resultRef to cls.rNew(args.map { it.get(pool)!! }))
+        }
+    }
 
-class Get(val resultVar: String, val objVar: String, val attr: String) : Command()
+    class Call(private val resultRef: String, private val obj: Variable,
+               private val method: String, private val args: List<Variable>) : Command() {
+        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+            val obj = obj.get(pool)
+            return pool.plus(resultRef to when (obj) {
+                is KClass<*> -> obj.rCall(method, args.getAll(pool))
+                is Any -> obj.rCall(method, args.getAll(pool))
+                else -> throw NullPointerException("Can't call empty ref")
+            })
+        }
+    }
 
-class Free(val objVar: String) : Command()
+    class Get(private val resultRef: String, private val obj: Variable,
+              private val attr: String) : Command() {
+        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+            val obj = obj.get(pool)
+            if (obj !is KClass<*>) throw Exception("Can't get $attr of $obj")
 
+            return pool.plus(resultRef to obj.rGet(attr))
+        }
+    }
 
-data class NewGroup(val cls: String, val argsCount: Int)
+    class Free(private val ref: String) : Command() {
+        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> = pool.minus(ref)
+    }
+}
 
-data class CallGroup(val objVarType: Class<Any>, val method: String, val argsCount: Int)
+/**
+ * Translate string to interpreter data structures.
+ */
+object Translator {
+    fun translateArg(arg: List<Any>) = when (arg[0]) {
+        ":val" -> Variable.Value(arg[1])
+        ":var" -> Variable.Reference(arg[1] as String)
+        else -> throw Exception("Not allowed arg $arg")
+    }
 
-data class GetGroup(val objVar: String, val attr: String)
+    fun translateArgs(args: Any): List<Variable> = (args as List<List<Any>>).map { translateArg(it) }
 
-
-class Stopped : Exception()
+    fun translate(script: List<List<Any>>): List<Command> = script.map { line ->
+        when (line[0]) {
+            ":new" -> Command.New(
+                    line[1] as String,
+                    Variable.Reference(line[2] as String),
+                    translateArgs(line[3]))
+            ":call" -> Command.Call(
+                    line[1] as String,
+                    Variable.Reference(line[2] as String),
+                    line[3] as String,
+                    translateArgs(line[4]))
+            ":get" -> Command.Get(
+                    line[1] as String,
+                    Variable.Reference(line[2] as String),
+                    line[3] as String)
+            ":free" -> Command.Free(line[1] as String)
+            else -> throw Exception("Illegal instruction $line")
+        }
+    }
+}
 
 class Interpreter {
-    val TAG = "INTERPRETE"
-    var callId = 0
-    var vars = mapOf<String, Any?>()
-    val newMap = getNewMap()
+    var pool = initialPool
 
-    fun call(script: Collection<List<Any>>, rootId: String): Bitmap {
-        val start = System.currentTimeMillis()
-        callId += 1
-        val currentCallId = callId
-
-        val actions = script.map {
-            when (it[0]) {
-                ":new" -> New(
-                        it[1] as String,
-                        it[2] as String,
-                        toVarsOrVals(it[3]))
-                ":call" -> Call(
-                        it[1] as String,
-                        it[2] as String,
-                        it[3] as String,
-                        toVarsOrVals(it[4]))
-                ":get" -> Get(
-                        it[1] as String,
-                        it[2] as String,
-                        it[3] as String)
-                ":free" -> Free(it[1] as String)
-                else -> throw Exception("Unknown action $it")
-            }
-        }
-        vars = actions.fold(vars, { vars, action ->
-            if (callId != currentCallId)
-                throw Stopped()
-            interpeteLine(vars, action)
+    fun interprete(script: List<List<Any>>, rootRef: String): Bitmap {
+        pool = Translator.translate(script).fold(pool, { pool, command ->
+            command.interprete(pool)
         })
-        val root = vars[rootId]
-
-        Log.d(TAG, "Took ${System.currentTimeMillis() - start}")
-
-        return when (root) {
-            is Bitmap -> root
-            else -> throw Exception("Root should be instance of Bitmap, not $root")
-        }
+        return pool[rootRef] as Bitmap
     }
-
-    fun prepareArg(vars: Map<String, Any?>, arg: VarOrVal): Any? = when (arg) {
-        is Var -> arg.toVal(vars).value
-        is Val -> arg.value
-        else -> throw Exception()
-    }
-
-    fun prepareArgs(vars: Map<String, Any?>, args: List<VarOrVal>): List<Any?> = args.map { arg ->
-        prepareArg(vars, arg)
-    }
-
-    fun interpeteLine(vars: Map<String, Any?>, it: Command): Map<String, Any?> = when (it) {
-        is New -> vars.plus(it.resultVar to newMap[
-                NewGroup(it.cls, it.args.count())
-        ]!!(prepareArgs(vars, it.args)))
-        is Call -> vars.plus(it.resultVar to doCall(
-                vars, vars.getOrElse(it.objVar, { -> it.objVar }),
-                it.method, prepareArgs(vars, it.args)))
-        is Get -> vars.plus(it.resultVar to doGet(
-                vars, it.objVar, it.attr))
-        is Free -> vars.minus(it.objVar)
-        else -> vars
-    }
-
 }

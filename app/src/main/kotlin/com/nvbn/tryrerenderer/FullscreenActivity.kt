@@ -20,8 +20,7 @@ public class FullscreenActivity : Activity() {
                 "file:///android_asset/index.html",
                 { script, rootId ->
                     try {
-                        view.render(interpreter.call(script, rootId))
-                    } catch (e: Stopped) {
+                        view.render(interpreter.interprete(script, rootId))
                     } catch (e: Exception) {
                         Log.e(TAG, "Interpretation failed", e)
                     }
