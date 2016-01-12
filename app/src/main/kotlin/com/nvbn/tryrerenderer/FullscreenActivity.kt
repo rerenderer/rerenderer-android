@@ -1,6 +1,7 @@
 package com.nvbn.tryrerenderer
 
 import android.app.Activity
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import android.widget.FrameLayout
@@ -16,16 +17,14 @@ public class FullscreenActivity : Activity() {
         val view = FullscreenView(ctx)
         setContentView(view)
 
-        val interop = Interop(
-                "file:///android_asset/index.html",
-                { script, rootId ->
-                    try {
-                        view.render(interpreter.interprete(script, rootId))
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Interpretation failed", e)
-                    }
-                },
-                ctx)
+        val interop = interop("file:///android_asset/index.html") { script, rootId ->
+            try {
+                interpreter.execute(script)
+                view.render(interpreter.pool[rootId] as Bitmap)
+            } catch (e: Exception) {
+                Log.e(TAG, "Interpretation failed", e)
+            }
+        }
         view.propagate = { x -> interop.sendEvent(x) }
     }
 }

@@ -1,28 +1,30 @@
 package com.nvbn.tryrerenderer
 
 import android.content.Context
-import android.util.Log
 import android.webkit.WebSettings
-import android.webkit.WebView
 import com.cognitect.transit.TransitFactory
 import com.cognitect.transit.Writer
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.info
+import org.jetbrains.anko.warn
+import org.jetbrains.anko.webView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
-class Interop(url: String,
-              val onCall: (data: List<List<Any>>, rootId: String) -> Unit,
-              context: Context) : WebView(context) {
-    val TAG = "INTEROP"
-    var callbacks = mapOf<String, String>()
-
+class Interop(val ctx: Context, val url: String,
+              val onCall: (data: List<List<Any>>, rootId: String) -> Unit) : AnkoLogger {
     inner class JSInterface {
         fun send(serialised: String, rootId: String) {
             val data = deserialise(serialised)
-            onCall(data, rootId)
+            try {
+                onCall(data, rootId)
+            } catch (e: Exception) {
+                warn("Rendering callback failed", e)
+            }
         }
 
         fun listen(event: String, callback: String) {
-            Log.d(TAG, "Start listening $event")
+            info("Start listening $event")
             callbacks = callbacks.plus(event to callback)
         }
 
@@ -31,14 +33,14 @@ class Interop(url: String,
         fun height(): Int = 1920
     }
 
-    init {
+    var callbacks = mapOf<String, String>()
+    val web = ctx.webView {
         setWillNotDraw(true)
         settings.setAppCacheEnabled(false)
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
         settings.javaScriptEnabled = true
         settings.defaultTextEncodingName = "utf-8"
-        val jsInterface = JSInterface()
-        addJavascriptInterface(jsInterface, "android")
+        addJavascriptInterface(JSInterface(), "android")
         loadUrl(url)
     }
 
@@ -57,11 +59,14 @@ class Interop(url: String,
     }
 
     fun sendEvent(event: Map<String, Any>) {
-        Log.d(TAG, "Send event $event")
+        info("Send event $event")
         val serialised = serialise(event)
-        val callback = callbacks.getRaw(event.getRaw("type"))
+        val callback = callbacks[event["type"]]
         if (callback is String) {
-            loadUrl("javascript: document['$callback']('$serialised')")
+            web.loadUrl("javascript: document['$callback']('$serialised')")
         }
     }
 }
+
+fun Context.interop(url: String, onCall: (data: List<List<Any>>, rootId: String) -> Unit) =
+        Interop(this, url, onCall)
