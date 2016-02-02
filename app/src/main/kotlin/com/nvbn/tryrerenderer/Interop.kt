@@ -2,12 +2,16 @@ package com.nvbn.tryrerenderer
 
 import android.content.Context
 import android.webkit.WebSettings
-import com.cognitect.transit.TransitFactory
-import com.cognitect.transit.Writer
+//import com.cognitect.transit.TransitFactory
+//import com.cognitect.transit.Writer
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
 import org.jetbrains.anko.warn
 import org.jetbrains.anko.webView
+import com.github.salomonbrys.kotson.simpleDeserialize
+import com.github.salomonbrys.kotson.array
+import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.GsonBuilder
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
@@ -45,17 +49,19 @@ class Interop(val ctx: Context, val url: String,
     }
 
     fun serialise(data: Any): String {
-        val baos = ByteArrayOutputStream()
-        val writer: Writer<Any> = TransitFactory.writer(
-                TransitFactory.Format.JSON, baos)
-        writer.write(data)
-        return baos.toString()
+//        val baos = ByteArrayOutputStream()
+//        val writer: Writer<Any> = TransitFactory.writer(
+//                TransitFactory.Format.JSON, baos)
+//        writer.write(data)
+//        return baos.toString()
+        return ""
     }
 
     fun deserialise(data: String): List<List<Any>> {
-        val bais = ByteArrayInputStream(data.toByteArray("utf-8"))
-        val reader = TransitFactory.reader(TransitFactory.Format.JSON, bais)
-        return reader.read()
+//        val bais = ByteArrayInputStream(data.toByteArray("utf-8"))
+//        val reader = TransitFactory.reader(TransitFactory.Format.JSON, bais)
+//        return reader.read()
+        return listOf()
     }
 
     fun sendEvent(event: Map<String, Any>) {

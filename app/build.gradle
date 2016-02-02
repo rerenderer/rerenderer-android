@@ -12,42 +12,65 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+        androidTest.java.srcDirs += 'src/androidTest/kotlin'
     }
+
     packagingOptions {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 buildscript {
-    ext.kotlin_version = '1.0.0-beta-4584'
-    ext.anko_version = '0.8.1'
-    ext.transit_version = '0.8.311'
+    ext {
+        kotlin_version = '1.0.0-beta-4584'
+        anko_version = '0.8.1'
+        transit_version = '0.8.311'
+        kotson_version = '1.7.0'
+        spek_version = '0.1.188'
+        testng_version = '6.9.10'
+    }
 
     repositories {
         mavenCentral()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:1.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
     }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile "com.cognitect:transit-java:$transit_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.anko:anko-sdk15:$anko_version"
+    compile "com.github.salomonbrys.kotson:kotson:$kotson_version"
+
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile "org.mockito:mockito-core:1.9.5"
+    androidTestCompile 'com.android.support:support-annotations:23.1.1'
+    androidTestCompile 'com.android.support.test:runner:0.4.1'
+    androidTestCompile 'com.android.support.test:rules:0.4.1'
+    androidTestCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
+
 repositories {
     mavenCentral()
 }

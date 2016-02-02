@@ -5,27 +5,18 @@ import kotlin.reflect.KClass
 /**
  * Accessor to variable in pool.
  */
-abstract class Variable {
-    abstract fun get(pool: Map<String, Any?>): Any?
-
-    class NotAllowedVariableException(variable: List<Any>) : Exception("Not allowed variable $variable")
-
-    class Reference(private val ref: String) : Variable() {
-        override fun get(pool: Map<String, Any?>) = pool[ref]
-    }
-
-    class Value(private val value: Any?) : Variable() {
-        override fun get(pool: Map<String, Any?>) = value
-    }
-
-    companion object {
-        fun fromSource(variable: List<Any>) = when (variable[0]) {
-            ":val" -> Variable.Value(variable[1])
-            ":var" -> Variable.Reference(variable[1] as String)
-            else -> throw NotAllowedVariableException(variable)
-        }
-    }
-}
+//abstract class _Variable {
+//    abstract fun get(pool: Map<String, Any?>): Any?
+//
+//
+//    class Reference(private val ref: String) : Var() {
+//        override fun extractVar(pool: Map<String, Any?>) = pool[ref]
+//    }
+//
+//    class Value(private val value: Any?) : Var() {
+//        override fun extractVar(pool: Map<String, Any?>) = value
+//    }
+//}
 
 /**
  * Rerenderer script command.
@@ -33,25 +24,25 @@ abstract class Variable {
 abstract class Command {
     abstract fun interprete(pool: Map<String, Any?>): Map<String, Any?>
 
-    fun List<Variable>.getAll(pool: Map<String, Any?>) = map { it.get(pool)!! }
+    fun List<Var>.getAll(pool: Map<String, Any?>) = map { it.extractVar(pool)!! }
 
     class NotClassException(notCls: Any?) : Exception("Isn't class $notCls!")
 
-    class EmptyVariableException(variable: Variable) : Exception("Ref $variable is empty!")
+    class EmptyVariableException(variable: Var) : Exception("Ref $variable is empty!")
 
-    class New(private val resultRef: String, private val cls: Variable,
-              private val args: List<Variable>) : Command() {
+    class New(private val resultRef: String, private val cls: Var,
+              private val args: List<Var>) : Command() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
-            val cls = cls.get(pool)
+            val cls = cls.extractVar(pool)
             if (cls !is KClass<*>) throw NotClassException(cls)
-            return pool.plus(resultRef to cls.rNew(args.map { it.get(pool)!! }))
+            return pool.plus(resultRef to cls.rNew(args.map { it.extractVar(pool)!! }))
         }
     }
 
-    class Call(private val resultRef: String, private val obj: Variable,
-               private val method: String, private val args: List<Variable>) : Command() {
+    class Call(private val resultRef: String, private val obj: Var,
+               private val method: String, private val args: List<Var>) : Command() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
-            val obj = obj.get(pool)
+            val obj = obj.extractVar(pool)
             return pool.plus(resultRef to when (obj) {
                 is KClass<*> -> obj.rCall(method, args.getAll(pool))
                 is Any -> obj.rCall(method, args.getAll(pool))
@@ -60,10 +51,10 @@ abstract class Command {
         }
     }
 
-    class Get(private val resultRef: String, private val obj: Variable,
+    class Get(private val resultRef: String, private val obj: Var,
               private val attr: String) : Command() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
-            val obj = obj.get(pool)
+            val obj = obj.extractVar(pool)
             if (obj !is KClass<*>) throw NotClassException(obj)
             return pool.plus(resultRef to obj.rGet(attr))
         }
@@ -74,26 +65,26 @@ abstract class Command {
     }
 
     companion object {
-        private fun translateArgs(args: Any): List<Variable> =
-                (args as List<List<Any>>).map { Variable.fromSource(it) }
-
-        fun fromSource(line: List<Any>) = when (line[0]) {
-            ":new" -> Command.New(
-                    line[1] as String,
-                    Variable.Reference(line[2] as String),
-                    translateArgs(line[3]))
-            ":call" -> Command.Call(
-                    line[1] as String,
-                    Variable.Reference(line[2] as String),
-                    line[3] as String,
-                    translateArgs(line[4]))
-            ":get" -> Command.Get(
-                    line[1] as String,
-                    Variable.Reference(line[2] as String),
-                    line[3] as String)
-            ":free" -> Command.Free(line[1] as String)
-            else -> throw Exception("Illegal instruction $line")
-        }
+//        private fun translateArgs(args: Any): List<Variable> =
+//                (args as List<List<Any>>).map { Variable.fromSource(it) }
+//
+//        fun fromSource(line: List<Any>) = when (line[0]) {
+//            ":new" -> Command.New(
+//                    line[1] as String,
+//                    Variable.Reference(line[2] as String),
+//                    translateArgs(line[3]))
+//            ":call" -> Command.Call(
+//                    line[1] as String,
+//                    Variable.Reference(line[2] as String),
+//                    line[3] as String,
+//                    translateArgs(line[4]))
+//            ":get" -> Command.Get(
+//                    line[1] as String,
+//                    Variable.Reference(line[2] as String),
+//                    line[3] as String)
+//            ":free" -> Command.Free(line[1] as String)
+//            else -> throw Exception("Illegal instruction $line")
+//        }
     }
 }
 
@@ -101,7 +92,7 @@ class Interpreter {
     var pool = initialPool
 
     fun execute(script: List<List<Any>>) {
-        pool = script.map { Command.fromSource(it) }
-                .fold(pool) { pool, command -> command.interprete(pool) }
+//        pool = script.map { Command.fromSource(it) }
+//                .fold(pool) { pool, command -> command.interprete(pool) }
     }
 }
