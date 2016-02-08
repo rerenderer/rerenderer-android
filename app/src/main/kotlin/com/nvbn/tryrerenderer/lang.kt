@@ -60,29 +60,6 @@ sealed class Instruction {
 
     class Free(val ref: Var.Ref) : Instruction() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> =
-                pool.minus(ref.id)
-    }
-
-    companion object {
-        //        fun translateArgs(args: Any): List<Variable> =
-        //                (args as List<List<Any>>).map { Variable.fromSource(it) }
-        //
-        //        fun fromSource(line: List<Any>) = when (line[0]) {
-        //            ":new" -> Instruction.New(
-        //                    line[1] as String,
-        //                    Variable.Reference(line[2] as String),
-        //                    translateArgs(line[3]))
-        //            ":call" -> Instruction.Call(
-        //                    line[1] as String,
-        //                    Variable.Reference(line[2] as String),
-        //                    line[3] as String,
-        //                    translateArgs(line[4]))
-        //            ":get" -> Instruction.Get(
-        //                    line[1] as String,
-        //                    Variable.Reference(line[2] as String),
-        //                    line[3] as String)
-        //            ":free" -> Instruction.Free(line[1] as String)
-        //            else -> throw Exception("Illegal instruction $line")
-        //        }
+                pool.plus(ref.id to null)
     }
 }

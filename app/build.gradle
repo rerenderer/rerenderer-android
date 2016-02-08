@@ -37,10 +37,10 @@ android {
 
 buildscript {
     ext {
-        kotlin_version = '1.0.0-beta-4584'
-        anko_version = '0.8.1'
+        kotlin_version = '1.0.0-rc-1036'
+        anko_version = '0.8.2'
         transit_version = '0.8.311'
-        kotson_version = '1.7.0'
+        kotson_version = '2.0.0'
         spek_version = '0.1.188'
         testng_version = '6.9.10'
     }
@@ -68,6 +68,7 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:23.1.1'
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
+    androidTestCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     androidTestCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 

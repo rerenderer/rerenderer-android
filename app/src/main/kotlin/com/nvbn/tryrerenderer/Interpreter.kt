@@ -61,7 +61,8 @@ abstract class Command {
     }
 
     class Free(private val ref: String) : Command() {
-        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> = pool.minus(ref)
+        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> = pool.plus(
+                ref to null)
     }
 
     companion object {

@@ -2,7 +2,7 @@ package com.nvbn.tryrerenderer
 
 import android.test.AndroidTestCase
 
-class RefTest : AndroidTestCase() {
+class VarRefTest : AndroidTestCase() {
     fun testExtractVar() {
         val ref = Var.Ref("test")
         val pool = mapOf<String, Any?>(
@@ -13,7 +13,7 @@ class RefTest : AndroidTestCase() {
     }
 }
 
-class ValTest : AndroidTestCase() {
+class VarValTest : AndroidTestCase() {
     fun testExtractVar() {
         val val_ = Var.Val(25)
         val pool = mapOf<String, Any?>()
@@ -21,7 +21,7 @@ class ValTest : AndroidTestCase() {
     }
 }
 
-class StaticTest : AndroidTestCase() {
+class VarStaticTest : AndroidTestCase() {
     fun testExtractVar() {
         // TODO: implement
     }
