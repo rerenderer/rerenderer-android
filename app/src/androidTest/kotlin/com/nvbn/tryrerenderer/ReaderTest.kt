@@ -6,7 +6,6 @@ import kotlin.test.assertFailsWith
 
 
 class ReaderTest : AndroidTestCase() {
-    val reader: Reader get() = Reader()
 
     inline fun <reified T : Any> throughJson(vararg data: Any): T {
         val json = reader.gson.toJson(data)
@@ -44,7 +43,7 @@ class ReaderTest : AndroidTestCase() {
     }
 
     fun testParseNotAllowedVar() {
-        assertFailsWith(Reader.NotAllowedVarException::class) {
+        assertFailsWith(reader.NotAllowedVarException::class) {
             reader.gson.fromJson<Var>("[\"undefined\",\"test\"]")
         }
     }
@@ -132,7 +131,7 @@ class ReaderTest : AndroidTestCase() {
     }
 
     fun testParseNotAllowedInstruction() {
-        assertFailsWith(Reader.NotAllowedInstructionException::class) {
+        assertFailsWith(reader.NotAllowedInstructionException::class) {
             reader.gson.fromJson<Instruction>("[\"undefined\",\"instruction\"]")
         }
     }

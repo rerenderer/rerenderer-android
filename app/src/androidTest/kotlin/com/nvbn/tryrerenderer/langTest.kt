@@ -7,8 +7,7 @@ class VarRefTest : AndroidTestCase() {
         val ref = Var.Ref("test")
         val pool = mapOf<String, Any?>(
                 "test" to 12,
-                "wrong" to "wrong"
-        )
+                "wrong" to "wrong")
         assertEquals(ref.extractVar(pool)!!, 12)
     }
 }
@@ -23,6 +22,27 @@ class VarValTest : AndroidTestCase() {
 
 class VarStaticTest : AndroidTestCase() {
     fun testExtractVar() {
-        // TODO: implement
+        val static = Var.Static("test")
+        val pool = mapOf<String, Any?>()
+        assertEquals(static.extractVar(pool), reflection.Static("test"))
+    }
+}
+
+class NetTest: AndroidTestCase() {
+    fun testInterprete() {
+        val instruction = Instruction.New(
+                Var.Ref("x"), Var.Ref("y"), listOf())
+        val pool = mapOf("y" to TestCls::class)
+        val resultPool = instruction.interprete(pool)
+        assertTrue(resultPool["x"] is TestCls)
+    }
+
+    fun testInterpreteWithArgs() {
+        val instruction = Instruction.New(
+                Var.Ref("x"), Var.Ref("y"), listOf(Var.Val("value")))
+        val pool = mapOf("y" to TestCls::class)
+        val resultPool = instruction.interprete(pool)
+        assertTrue(resultPool["x"] is TestCls)
+        assertEquals("value", (resultPool["x"] as TestCls).attr)
     }
 }

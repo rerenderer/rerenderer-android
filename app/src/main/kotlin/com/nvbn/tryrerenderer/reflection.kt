@@ -1,126 +1,133 @@
 package com.nvbn.tryrerenderer
 
 import kotlin.reflect.*
-import android.graphics.*
+import kotlin.reflect.jvm.javaConstructor
+import kotlin.reflect.jvm.javaMethod
 
-fun KType.isNumeric() = listOf(
-        Number::class.defaultType,
-        Double::class.defaultType,
-        Float::class.defaultType,
-        Long::class.defaultType,
-        Int::class.defaultType,
-        Short::class.defaultType,
-        Byte::class.defaultType).contains(this)
+object reflection {
+    data class Static(val path: String)
 
-fun KParameter.compatible(arg: Any): Boolean = when {
-    type == arg.javaClass.kotlin.defaultType -> true
-    type.isNumeric() && arg.javaClass.kotlin.defaultType.isNumeric() -> true
-    else -> false
+    /**
+     * Returns true when cls is numeric.
+     */
+    private fun isNumeric(cls: KClass<*>) = listOf(
+            Number::class.qualifiedName,
+            Double::class.qualifiedName,
+            Float::class.qualifiedName,
+            Long::class.qualifiedName,
+            Int::class.qualifiedName,
+            Short::class.qualifiedName,
+            Byte::class.qualifiedName).contains(cls.qualifiedName)
+
+    /**
+     * Returns true when arg compatible with cls.
+     */
+    private fun compatible(param: KClass<*>, arg: Any) = when {
+        param == arg.javaClass.kotlin -> true
+        isNumeric(param) && arg is Number -> true
+        else -> false
+    }
+
+    /**
+     * Returns true when list of args compatible with list of parameter types.
+     */
+    private fun compatible(parameterTypes: Array<Class<*>>, args: List<Any>) = when {
+        parameterTypes.count() != args.count() -> false
+        parameterTypes.zip(args).all {
+            val (param, arg) = it
+            compatible(param.kotlin, arg)
+        } -> true
+        else -> false
+    }
+
+    /**
+     * Casts number to numeric cls.
+     */
+    private fun castNumeric(arg: Number, cls: KClass<*>) = when (cls.qualifiedName) {
+        Double::class.qualifiedName -> arg.toDouble()
+        Float::class.qualifiedName -> arg.toFloat()
+        Long::class.qualifiedName -> arg.toLong()
+        Int::class.qualifiedName -> arg.toInt()
+        Short::class.qualifiedName -> arg.toShort()
+        Byte::class.qualifiedName -> arg.toByte()
+        else -> arg
+    }
+
+    /**
+     * Prepares args for calling function.
+     */
+    private fun prepareArgs(args: List<Any>, parameterTypes: Array<Class<*>>) =
+            args.zip(parameterTypes).map {
+                val (arg, param) = it
+                when {
+                    isNumeric(param.kotlin) -> castNumeric(arg as Number, param.kotlin)
+                    else -> arg
+                }
+            }
+
+    /**
+     * Gets class by static and path.
+     */
+    fun get(obj: Static, attr: String): Any {
+        val path = "${obj.path}.$attr"
+        try {
+            return Class.forName(path).kotlin
+        } catch (e: Exception) {
+            return Static(path)
+        }
+    }
+
+    /**
+     * Gets static attribute of class.
+     */
+    fun get(obj: KClass<*>, attr: String): Any? {
+        val prop = obj.staticProperties.filter({ it.name == attr })[0]
+        return prop.get()
+    }
+
+    /**
+     * Gets attribute of instance.
+     */
+    fun get(obj: Any, attr: String): Any? {
+        val cls = obj.javaClass.kotlin
+        val prop = cls.declaredMemberProperties.filter({ it.name == attr })[0]
+        return prop.get(obj)
+    }
+
+    /**
+     * Calls static method of class.
+     */
+    fun call(obj: KClass<*>, method: String, args: List<Any>): Any? {
+        val fn = obj.staticFunctions.filter({
+            it.name == method && compatible(
+                    it.javaMethod!!.parameterTypes, args)
+        })[0]
+        return fn.call(*prepareArgs(
+                args, fn.javaMethod!!.parameterTypes).toTypedArray())
+    }
+
+    /**
+     * Class method of instance.
+     */
+    fun call(obj: Any, method: String, args: List<Any>): Any? {
+        val cls = obj.javaClass.kotlin
+        val fn = cls.declaredFunctions.filter({
+            it.name == method && compatible(
+                    it.javaMethod!!.parameterTypes, args)
+        })[0]
+        val fnArgs = listOf(obj).plus(prepareArgs(
+                args, fn.javaMethod!!.parameterTypes))
+        return fn.call(*fnArgs.toTypedArray())
+    }
+
+    /**
+     * Creates instance of class.
+     */
+    fun new(cls: KClass<*>, args: List<Any>): Any {
+        val constructor = cls.constructors.filter({
+            compatible(it.javaConstructor!!.parameterTypes, args)
+        })[0]
+        return constructor.call(*prepareArgs(
+                args, constructor.javaConstructor!!.parameterTypes).toTypedArray())
+    }
 }
-
-/**
- * Returns `true` when function signature is compatible to passed args.
- */
-fun KFunction<*>.compatible(args: List<Any>) = when {
-    parameters.count() != args.count() -> false
-    parameters.zip(args).all {
-        val (param, arg) = it
-        param.compatible(arg)
-    } -> true
-    else -> false
-}
-
-fun KClass<*>.rNew(args: List<Any>): Any? =
-        if (primaryConstructor is KFunction<*> && primaryConstructor!!.compatible(args))
-            primaryConstructor!!.call(args)
-        else
-            constructors.filter({ it.compatible(args) })[0].call(args)
-
-fun KClass<*>.rCall(method: String, args: List<Any>): Any? =
-        staticFunctions.filter(
-                { it.name == method && it.compatible(args) })[0].call(args)
-
-fun Any.rCall(method: String, args: List<Any>): Any? =
-        javaClass.kotlin.declaredFunctions.filter(
-                { it.name == method && it.compatible(args) })[0].call(args)
-
-fun KClass<*>.rGet(attr: String): Any? =
-        staticProperties.filter({ it.name == attr })[0].get()
-
-/**
- * Generated in browser by for api v15 on https://developer.android.com/intl/ru/reference/android/graphics/package-summary.html:
- * $('.jd-linkcol a').map(function(_, x) {return '"' + x.text.replace('.', '\\$') + '" to ' + x.text + "::class"}).toArray().join(',\n')
- */
-val initialPool = mapOf<String, Any?>(
-        "SurfaceTexture\$OnFrameAvailableListener" to SurfaceTexture.OnFrameAvailableListener::class,
-        "Bitmap" to Bitmap::class,
-        "BitmapFactory" to BitmapFactory::class,
-        "BitmapFactory\$Options" to BitmapFactory.Options::class,
-        "BitmapRegionDecoder" to BitmapRegionDecoder::class,
-        "BitmapShader" to BitmapShader::class,
-        "BlurMaskFilter" to BlurMaskFilter::class,
-        "Camera" to Camera::class,
-        "Canvas" to Canvas::class,
-        "Color" to Color::class,
-        "ColorFilter" to ColorFilter::class,
-        "ColorMatrix" to ColorMatrix::class,
-        "ColorMatrixColorFilter" to ColorMatrixColorFilter::class,
-        "ComposePathEffect" to ComposePathEffect::class,
-        "ComposeShader" to ComposeShader::class,
-        "CornerPathEffect" to CornerPathEffect::class,
-        "DashPathEffect" to DashPathEffect::class,
-        "DiscretePathEffect" to DiscretePathEffect::class,
-        "DrawFilter" to DrawFilter::class,
-        "EmbossMaskFilter" to EmbossMaskFilter::class,
-        "ImageFormat" to ImageFormat::class,
-        "Interpolator" to Interpolator::class,
-        "LightingColorFilter" to LightingColorFilter::class,
-        "LinearGradient" to LinearGradient::class,
-        "MaskFilter" to MaskFilter::class,
-        "Matrix" to Matrix::class,
-        "Movie" to Movie::class,
-        "NinePatch" to NinePatch::class,
-        "Paint" to Paint::class,
-        "Paint\$FontMetrics" to Paint.FontMetrics::class,
-        "Paint\$FontMetricsInt" to Paint.FontMetricsInt::class,
-        "PaintFlagsDrawFilter" to PaintFlagsDrawFilter::class,
-        "Path" to Path::class,
-        "PathDashPathEffect" to PathDashPathEffect::class,
-        "PathEffect" to PathEffect::class,
-        "PathMeasure" to PathMeasure::class,
-        "Picture" to Picture::class,
-        "PixelFormat" to PixelFormat::class,
-        "Point" to Point::class,
-        "PointF" to PointF::class,
-        "PorterDuff" to PorterDuff::class,
-        "PorterDuffColorFilter" to PorterDuffColorFilter::class,
-        "PorterDuffXfermode" to PorterDuffXfermode::class,
-        "RadialGradient" to RadialGradient::class,
-        "Rect" to Rect::class,
-        "RectF" to RectF::class,
-        "Region" to Region::class,
-        "RegionIterator" to RegionIterator::class,
-        "Shader" to Shader::class,
-        "SumPathEffect" to SumPathEffect::class,
-        "SurfaceTexture" to SurfaceTexture::class,
-        "SweepGradient" to SweepGradient::class,
-        "Typeface" to Typeface::class,
-        "Xfermode" to Xfermode::class,
-        "YuvImage" to YuvImage::class,
-        "Bitmap\$CompressFormat" to Bitmap.CompressFormat::class,
-        "Bitmap\$Config" to Bitmap.Config::class,
-        "BlurMaskFilter\$Blur" to BlurMaskFilter.Blur::class,
-        "Canvas\$EdgeType" to Canvas.EdgeType::class,
-        "Canvas\$VertexMode" to Canvas.VertexMode::class,
-        "Interpolator\$Result" to Interpolator.Result::class,
-        "Matrix\$ScaleToFit" to Matrix.ScaleToFit::class,
-        "Paint\$Align" to Paint.Align::class,
-        "Paint\$Cap" to Paint.Cap::class,
-        "Paint\$Join" to Paint.Join::class,
-        "Paint\$Style" to Paint.Style::class,
-        "Path\$Direction" to Path.Direction::class,
-        "Path\$FillType" to Path.FillType::class,
-        "PathDashPathEffect\$Style" to PathDashPathEffect.Style::class,
-        "PorterDuff\$Mode" to PorterDuff.Mode::class,
-        "Region\$Op" to Region.Op::class,
-        "Shader\$TileMode" to Shader.TileMode::class)
