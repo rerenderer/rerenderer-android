@@ -8,7 +8,7 @@ import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.github.salomonbrys.kotson.fromJson
 
 
-class Reader {
+object reader {
     class NotAllowedVarException(variable: Any) : Exception(
             "Not allowed variable $variable")
 

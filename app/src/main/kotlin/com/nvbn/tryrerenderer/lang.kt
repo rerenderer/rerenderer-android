@@ -14,15 +14,16 @@ sealed class Var {
     }
 
     class Static(val id: String) : Var() {
-        // TODO: implement!
-        override fun extractVar(pool: Map<String, Any?>) = null
+        override fun extractVar(pool: Map<String, Any?>) = reflection.Static(id)
     }
 }
 
 sealed class Instruction {
     abstract fun interprete(pool: Map<String, Any?>): Map<String, Any?>
 
-    fun List<Var>.getAll(pool: Map<String, Any?>) = map { it.extractVar(pool)!! }
+    fun extractVars(vars: List<Var>, pool: Map<String, Any?>) = vars.map {
+        it.extractVar(pool)!!
+    }
 
     class NotClassException(notCls: Any?) : Exception("Isn't class $notCls!")
 
@@ -32,8 +33,11 @@ sealed class Instruction {
               val args: List<Var>) : Instruction() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
             val cls = cls.extractVar(pool)
-            if (cls !is KClass<*>) throw NotClassException(cls)
-            return pool.plus(resultRef.id to cls.rNew(args.map { it.extractVar(pool)!! }))
+            if (cls !is KClass<*>)
+                throw NotClassException(cls)
+
+            val inst = reflection.new(cls, extractVars(args, pool))
+            return pool.plus(resultRef.id to inst)
         }
     }
 
@@ -41,11 +45,15 @@ sealed class Instruction {
                val method: String, val args: List<Var>) : Instruction() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
             val obj = obj.extractVar(pool)
-            return pool.plus(resultRef.id to when (obj) {
-                is KClass<*> -> obj.rCall(method, args.getAll(pool))
-                is Any -> obj.rCall(method, args.getAll(pool))
+            val args = extractVars(args, pool)
+
+            val result = when (obj) {
+                is KClass<*> -> reflection.call(obj, method, args)
+                is Any -> reflection.call(obj, method, args)
                 else -> throw EmptyVariableException(this.obj)
-            })
+            }
+
+            return pool.plus(resultRef.id to result)
         }
     }
 
@@ -53,8 +61,15 @@ sealed class Instruction {
               val attr: String) : Instruction() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
             val obj = obj.extractVar(pool)
-            if (obj !is KClass<*>) throw NotClassException(obj)
-            return pool.plus(resultRef.id to obj.rGet(attr))
+
+            val result = when (obj) {
+                is KClass<*> -> reflection.get(obj, attr)
+                is reflection.Static -> reflection.get(obj, attr)
+                is Any -> reflection.get(obj, attr)
+                else -> throw EmptyVariableException(this.obj)
+            }
+
+            return pool.plus(resultRef.id to result)
         }
     }
 
