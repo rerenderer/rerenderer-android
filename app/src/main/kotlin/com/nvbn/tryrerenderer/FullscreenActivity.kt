@@ -8,7 +8,7 @@ import android.widget.FrameLayout
 import org.jetbrains.anko.*
 
 
-public class FullscreenActivity : Activity() {
+class FullscreenActivity : Activity() {
     val TAG = "FULSCREEN_ACTIVITY"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +19,7 @@ public class FullscreenActivity : Activity() {
 
         val interop = interop("file:///android_asset/index.html") { script, rootId ->
             try {
-                interpreter.execute(script)
+                interpreter.interprete(script)
                 view.render(interpreter.pool[rootId] as Bitmap)
             } catch (e: Exception) {
                 Log.e(TAG, "Interpretation failed", e)

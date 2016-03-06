@@ -1,14 +1,13 @@
 package com.nvbn.tryrerenderer
 
+import com.github.salomonbrys.kotson.*
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.Gson
-import com.github.salomonbrys.kotson.array
-import com.github.salomonbrys.kotson.registerTypeAdapter
-import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.JsonPrimitive
 
 
-object reader {
+object parser {
     class NotAllowedVarException(variable: Any) : Exception(
             "Not allowed variable $variable")
 
@@ -16,6 +15,20 @@ object reader {
             "Not allowed instruction $instruction")
 
     val gson: Gson = makeParser()
+
+    fun toJsonElement(x: Any?): JsonElement {
+        if (x == null)
+            return jsonNull
+
+        return when (x) {
+            is Number -> x.toJson()
+            is Char -> x.toJson()
+            is Boolean -> x.toJson()
+            is String -> x.toJson()
+            is JsonElement -> x
+            else -> throw IllegalArgumentException("${this} cannot be converted to JSON")
+        }
+    }
 
     fun makeParser() = GsonBuilder()
             .registerTypeAdapter<Instruction> {
@@ -56,6 +69,23 @@ object reader {
             .registerTypeAdapter<List<Var>> {
                 deserialize { it.json.array.map { gson.fromJson<Var>(it) } }
             }
+            .registerTypeAdapter<Bus.InterpreteRequest> {
+                deserialize {
+                    Bus.InterpreteRequest(
+                            gson.fromJson<List<Instruction>>(it.json["script"]),
+                            it.json["root"].string,
+                            it.json["scale"].bool)
+                }
+            }
+            .registerTypeAdapter<Bus.Event> {
+                serialize {
+                    val obj = jsonObject("event" to it.src.name)
+                    for ((key, value) in it.src.data) {
+                        obj.add(key, toJsonElement(value))
+                    }
+                    obj
+                }
+            }
             .create()
 
     val JsonElement.asAny: Any get() {
@@ -69,5 +99,7 @@ object reader {
         }
     }
 
-    fun read(code: String) = gson.fromJson<List<Instruction>>(code)
+    inline fun <reified T : Any> decode(code: String): T = gson.fromJson<T>(code)
+
+    inline fun <reified T: Any> encode(data: T): String = gson.typedToJson(data)
 }

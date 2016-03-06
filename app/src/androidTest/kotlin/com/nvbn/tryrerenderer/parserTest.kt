@@ -5,14 +5,14 @@ import com.github.salomonbrys.kotson.fromJson
 import kotlin.test.assertFailsWith
 
 
-class ReaderTest : AndroidTestCase() {
+class ParserTest : AndroidTestCase() {
 
     inline fun <reified T : Any> throughJson(vararg data: Any): T {
-        val json = reader.gson.toJson(data)
+        val json = parser.gson.toJson(data)
         if (Var::class.nestedClasses.contains(T::class)) {
-            return reader.gson.fromJson<Var>(json) as T
+            return parser.decode<Var>(json) as T
         } else {
-            return reader.gson.fromJson<Instruction>(json) as T
+            return parser.decode<Instruction>(json) as T
         }
     }
 
@@ -43,8 +43,8 @@ class ReaderTest : AndroidTestCase() {
     }
 
     fun testParseNotAllowedVar() {
-        assertFailsWith(reader.NotAllowedVarException::class) {
-            reader.gson.fromJson<Var>("[\"undefined\",\"test\"]")
+        assertFailsWith(parser.NotAllowedVarException::class) {
+            parser.gson.fromJson<Var>("[\"undefined\",\"test\"]")
         }
     }
 
@@ -130,9 +130,24 @@ class ReaderTest : AndroidTestCase() {
         assertEquals(free.ref.id, "unned")
     }
 
+    fun testParseInterpreteRequest() {
+        val request = parser.decode<Bus.InterpreteRequest>(
+                "{\"scale\": true, \"root\": \"test\", \"script\": []}")
+
+        assertEquals(listOf<Instruction>(), request.script)
+        assertEquals("test", request.root)
+        assertEquals(true, request.scale)
+    }
+
+    fun testSerializeEvent() {
+        val event = Bus.Event("click", mapOf("x" to 10, "y" to 50))
+        val serialized = parser.encode(event)
+        assertEquals("{\"event\":\"click\",\"x\":10,\"y\":50}", serialized)
+    }
+
     fun testParseNotAllowedInstruction() {
-        assertFailsWith(reader.NotAllowedInstructionException::class) {
-            reader.gson.fromJson<Instruction>("[\"undefined\",\"instruction\"]")
+        assertFailsWith(parser.NotAllowedInstructionException::class) {
+            parser.decode<Instruction>("[\"undefined\",\"instruction\"]")
         }
     }
 }
