@@ -81,8 +81,14 @@ object reflection {
      * Gets static attribute of class.
      */
     fun get(obj: KClass<*>, attr: String): Any? {
-        val prop = obj.staticProperties.filter({ it.name == attr })[0]
-        return prop.get()
+        if (obj.java.isEnum) {
+            return obj.java.enumConstants.filter {
+                it.toString() == attr
+            }[0]
+        } else {
+            val prop = obj.staticProperties.filter({ it.name == attr })[0]
+            return prop.get()
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.nvbn.tryrerenderer
 
+import android.graphics.Bitmap
 import android.test.AndroidTestCase
 
 class ReflectionTest : AndroidTestCase() {
@@ -23,6 +24,17 @@ class ReflectionTest : AndroidTestCase() {
     fun testGetStaticAttr() {
         val value = reflection.get(TestCls::class, "staticAttr")
         assertEquals("static-test", value)
+    }
+
+    fun testGetEnumValue() {
+        val value = reflection.get(Bitmap.Config::class, "ARGB_8888")
+        assertEquals(value, Bitmap.Config.ARGB_8888)
+    }
+
+    fun testGetInnerClass() {
+        val value = reflection.get(reflection.Static("android.graphics"),
+                                   "Bitmap\$Config")
+        assertEquals(value, Bitmap.Config::class)
     }
 
     fun testCallNumeric() {
