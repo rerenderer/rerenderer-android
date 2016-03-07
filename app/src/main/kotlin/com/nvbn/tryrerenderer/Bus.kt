@@ -4,7 +4,9 @@ class Bus(
         val onInterpreter: (request: InterpreteRequest) -> Unit,
         val execute: (js: String) -> Unit
 ) {
-    data class InterpreteRequest(val script: List<Instruction>, val root: String, val scale: Boolean)
+    data class InterpreteRequest(val script: List<Instruction>,
+                                 val root: Var.Ref,
+                                 val scale: Boolean)
 
     data class Event(val name: String, val data: Map<String, Any>)
 
