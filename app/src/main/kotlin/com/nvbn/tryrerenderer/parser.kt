@@ -4,10 +4,7 @@ import com.github.salomonbrys.kotson.*
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.Gson
-import com.google.gson.JsonPrimitive
 import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
-import org.jetbrains.anko.wtf
 
 
 object parser: AnkoLogger {

@@ -11,6 +11,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         View.OnTouchListener, AnkoLogger {
 
     var lastRoot: Bitmap? = null
+    var scale = true
     val paint = Paint()
     var surfaceWidth = 0
     var surfaceHeight = 0
@@ -25,7 +26,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     override fun surfaceCreated(holder: SurfaceHolder) {
         debug("Surface created")
         RerendererLoader.context = context
-        render(lastRoot, true)
+        render(lastRoot, scale)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -33,7 +34,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         surfaceWidth = width
         surfaceHeight = height
         bus?.updateInformation(width, height)
-        render(lastRoot, true)
+        render(lastRoot, scale)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -48,14 +49,19 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
                         0.toFloat(), 0.toFloat(),
                         surfaceWidth.toFloat(), surfaceHeight.toFloat(),
                         paint)
-                val scaledBitmap = Bitmap.createScaledBitmap(
-                        rootBitmap, surfaceWidth, surfaceHeight, true)
-                canvas.drawBitmap(scaledBitmap, 0.toFloat(), 0.toFloat(), paint)
+                if (scale) {
+                    val scaledBitmap = Bitmap.createScaledBitmap(
+                            rootBitmap, surfaceWidth, surfaceHeight, true)
+                    canvas.drawBitmap(scaledBitmap, 0.toFloat(), 0.toFloat(), paint)
+                } else {
+                    canvas.drawBitmap(rootBitmap, 0.toFloat(), 0.toFloat(), paint)
+                }
             } finally {
                 holder!!.unlockCanvasAndPost(canvas)
             }
         }
         lastRoot = rootBitmap
+        this.scale = scale
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
