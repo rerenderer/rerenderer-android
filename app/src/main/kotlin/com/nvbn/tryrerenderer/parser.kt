@@ -5,9 +5,12 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.Gson
 import com.google.gson.JsonPrimitive
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.debug
+import org.jetbrains.anko.wtf
 
 
-object parser {
+object parser: AnkoLogger {
     class NotAllowedVarException(variable: Any) : Exception(
             "Not allowed variable $variable")
 
@@ -73,7 +76,7 @@ object parser {
                 deserialize {
                     Bus.InterpreteRequest(
                             gson.fromJson<List<Instruction>>(it.json["script"]),
-                            it.json["root"].string,
+                            gson.fromJson<Var>(it.json["root"]) as Var.Ref,
                             it.json["scale"].bool)
                 }
             }
@@ -88,7 +91,10 @@ object parser {
             }
             .create()
 
-    val JsonElement.asAny: Any get() {
+    val JsonElement.asAny: Any? get() {
+        if (isJsonNull)
+            return null
+
         val primitive = asJsonPrimitive
         return when {
             primitive.isString -> primitive.asString

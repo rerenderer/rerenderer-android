@@ -7,14 +7,20 @@ sealed class Var {
 
     class Ref(val id: String) : Var() {
         override fun extractVar(pool: Map<String, Any?>) = pool[id]
+
+        override fun toString() = "[:var $id]"
     }
 
     class Val(val value: Any?) : Var() {
         override fun extractVar(pool: Map<String, Any?>) = value
+
+        override fun toString() = "[:val $value]"
     }
 
     class Static(val id: String) : Var() {
         override fun extractVar(pool: Map<String, Any?>) = reflection.Static(id)
+
+        override fun toString() = "[:static $id]"
     }
 }
 
@@ -39,6 +45,8 @@ sealed class Instruction {
             val inst = reflection.new(cls, extractVars(args, pool))
             return pool.plus(resultRef.id to inst)
         }
+
+        override fun toString() = "[:new $resultRef $cls $args]"
     }
 
     class Call(val resultRef: Var.Ref, val obj: Var,
@@ -55,6 +63,8 @@ sealed class Instruction {
 
             return pool.plus(resultRef.id to result)
         }
+
+        override fun toString() = "[:call $resultRef $obj $method $args]"
     }
 
     class Get(val resultRef: Var.Ref, val obj: Var,
@@ -71,10 +81,14 @@ sealed class Instruction {
 
             return pool.plus(resultRef.id to result)
         }
+
+        override fun toString() = "[:get $resultRef $obj $attr]"
     }
 
     class Free(val ref: Var.Ref) : Instruction() {
         override fun interprete(pool: Map<String, Any?>): Map<String, Any?> =
                 pool.plus(ref.id to null)
+
+        override fun toString() = "[:free $ref]"
     }
 }
