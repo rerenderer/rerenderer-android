@@ -8,23 +8,14 @@ import android.widget.FrameLayout
 import org.jetbrains.anko.*
 
 
-class FullscreenActivity : Activity() {
-    val TAG = "FULSCREEN_ACTIVITY"
+class FullscreenActivity : Activity(), AnkoLogger {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val interpreter = Interpreter()
         val view = FullscreenView(ctx)
         setContentView(view)
 
-        val interop = interop("file:///android_asset/index.html") { script, rootId ->
-            try {
-                interpreter.interprete(script)
-                view.render(interpreter.pool[rootId] as Bitmap)
-            } catch (e: Exception) {
-                Log.e(TAG, "Interpretation failed", e)
-            }
-        }
-        view.propagate = { x -> interop.sendEvent(x) }
+        val executor = Executor(
+                ctx, "http://192.168.0.105:3449", view)
     }
 }

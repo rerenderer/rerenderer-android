@@ -3,20 +3,18 @@ package com.nvbn.tryrerenderer
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Paint
-import android.util.Log
 import android.view.*
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.debug
 
 class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
-        View.OnTouchListener {
+        View.OnTouchListener, AnkoLogger {
 
     var lastRoot: Bitmap? = null
     val paint = Paint()
-    val TAG = "FULLSCREEN_VIEW"
     var surfaceWidth = 0
     var surfaceHeight = 0
-    var propagate: (event: Map<String, Any>) -> Unit = { event ->
-        Log.d(TAG, "Event bus not ready, skip $event")
-    }
+    var bus: Bus? = null
 
     init {
         holder.addCallback(this)
@@ -25,23 +23,24 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        Log.d(TAG, "Surface created")
+        debug("Surface created")
         RerendererLoader.context = context
-        render(lastRoot)
+        render(lastRoot, true)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        Log.d(TAG, "Surface changed")
+        debug("Surface changed")
         surfaceWidth = width
         surfaceHeight = height
-        render(lastRoot)
+        bus?.updateInformation(width, height)
+        render(lastRoot, true)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
-    fun render(rootBitmap: Bitmap?) {
-        Log.d(TAG, "Render $rootBitmap on $holder")
+    fun render(rootBitmap: Bitmap?, scale: Boolean) {
+        debug("Render $rootBitmap on $holder")
         if (holder != null && rootBitmap != null) {
             val canvas = holder!!.lockCanvas()
             try {
@@ -60,10 +59,10 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        Log.d(TAG, "Touch $event")
-        propagate(mapOf("type" to "click",
+        bus?.sendEvent(Bus.Event("click", mapOf(
                 "x" to event.x,
-                "y" to event.y))
+                "y" to event.y
+        )))
         return true
     }
 }
