@@ -13,7 +13,7 @@ class BusTest : AndroidTestCase() {
     fun testInterprete() {
         var result: Bus.InterpreteRequest? = null
         val bus = Bus({ result = it }, {})
-        bus.interprete("{\"scale\": true, \"root\": [\"ref\", \"test\"], \"script\": [[\"new\", [\"ref\", \"x\"], [\"static\", \"Test\"], [[\"ref\", \"y\"], [\"val\", 12]]]]}")
+        bus.interprete("{\"scale\": true, \"root\": [\"ref\", \"test\"], \"script\": [[\"new\", [\"ref\", \"x\"], [\"static\", \"Test\"], [[\"ref\", \"y\"], [\"val\", 12]]]]}").get()
 
         assertEquals(result!!.root.id, "test")
         assertEquals(result!!.scale, true)

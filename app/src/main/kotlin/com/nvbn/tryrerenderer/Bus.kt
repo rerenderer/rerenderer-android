@@ -15,11 +15,9 @@ class Bus(
 
     val readExecutor = Executors.newFixedThreadPool(4)
 
-    fun interprete(data: String) {
-        async(readExecutor) {
-            val request = parser.decode<InterpreteRequest>(data)
-            onInterpreter(request)
-        }
+    fun interprete(data: String) = async(readExecutor) {
+        val request = parser.decode<InterpreteRequest>(data)
+        onInterpreter(request)
     }
 
     fun sendEvent(event: Event) {
