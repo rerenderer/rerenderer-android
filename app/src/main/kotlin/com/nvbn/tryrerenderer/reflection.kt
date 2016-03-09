@@ -7,6 +7,10 @@ import kotlin.reflect.jvm.javaMethod
 object reflection {
     data class Static(val path: String)
 
+    private fun argTypes(args: List<Any>) = args.map {
+        it.javaClass.kotlin.qualifiedName
+    }.joinToString(", ")
+
     /**
      * Returns true when cls is numeric.
      */
@@ -65,74 +69,97 @@ object reflection {
                 }
             }
 
+    val staticPathsCache = Cache<Any>()
+
     /**
      * Gets class by static and path.
      */
     fun get(obj: Static, attr: String): Any {
         val path = "${obj.path}.$attr"
-        try {
-            return Class.forName(path).kotlin
-        } catch (e: Exception) {
-            return Static(path)
+        return staticPathsCache.get(path) {
+            try {
+                Class.forName(path).kotlin
+            } catch (e: Exception) {
+                Static(path)
+            }
         }
     }
+
+    val staticAttributesCache = Cache<Any?>()
 
     /**
      * Gets static attribute of class.
      */
-    fun get(obj: KClass<*>, attr: String): Any? {
-        if (obj.java.isEnum) {
-            return obj.java.enumConstants.filter {
-                it.toString() == attr
-            }[0]
-        } else {
-            val prop = obj.staticProperties.filter({ it.name == attr })[0]
-            return prop.get()
-        }
-    }
+    fun get(obj: KClass<*>, attr: String): Any? =
+            staticAttributesCache.get("${obj.qualifiedName}::$attr") {
+                if (obj.java.isEnum) {
+                    obj.java.enumConstants.filter {
+                        it.toString() == attr
+                    }[0]
+                } else {
+                    val prop = obj.staticProperties.filter({ it.name == attr })[0]
+                    prop.get()
+                }
+            }
+
+    val attributesCache = Cache<KProperty1<Any, Any?>>()
 
     /**
      * Gets attribute of instance.
      */
     fun get(obj: Any, attr: String): Any? {
         val cls = obj.javaClass.kotlin
-        val prop = cls.declaredMemberProperties.filter({ it.name == attr })[0]
+        val prop = attributesCache.get("${cls.qualifiedName}.$attr") {
+            cls.declaredMemberProperties.filter({ it.name == attr })[0]
+        }
         return prop.get(obj)
     }
+
+    val staticMethodsCache = Cache<KFunction<Any?>>()
 
     /**
      * Calls static method of class.
      */
     fun call(obj: KClass<*>, method: String, args: List<Any>): Any? {
-        val fn = obj.staticFunctions.filter({
-            it.name == method && compatible(
-                    it.javaMethod!!.parameterTypes, args)
-        })[0]
+        val fn = staticMethodsCache.get("${obj.qualifiedName}::$method(${argTypes(args)})") {
+            obj.staticFunctions.filter({
+                it.name == method && compatible(
+                        it.javaMethod!!.parameterTypes, args)
+            })[0]
+        }
         return fn.call(*prepareArgs(
                 args, fn.javaMethod!!.parameterTypes).toTypedArray())
     }
+
+    val methodsCache = Cache<KFunction<Any?>>()
 
     /**
      * Class method of instance.
      */
     fun call(obj: Any, method: String, args: List<Any>): Any? {
         val cls = obj.javaClass.kotlin
-        val fn = cls.declaredFunctions.filter({
-            it.name == method && compatible(
-                    it.javaMethod!!.parameterTypes, args)
-        })[0]
+        val fn = methodsCache.get("${cls.qualifiedName}.$method(${argTypes(args)})") {
+            cls.declaredFunctions.filter({
+                it.name == method && compatible(
+                        it.javaMethod!!.parameterTypes, args)
+            })[0]
+        }
         val fnArgs = listOf(obj).plus(prepareArgs(
                 args, fn.javaMethod!!.parameterTypes))
         return fn.call(*fnArgs.toTypedArray())
     }
 
+    val constructorsCache = Cache<KFunction<Any>>()
+
     /**
      * Creates instance of class.
      */
     fun new(cls: KClass<*>, args: List<Any>): Any {
-        val constructor = cls.constructors.filter({
-            compatible(it.javaConstructor!!.parameterTypes, args)
-        })[0]
+        val constructor = constructorsCache.get("${cls.qualifiedName}(${argTypes(args)})") {
+            cls.constructors.filter({
+                compatible(it.javaConstructor!!.parameterTypes, args)
+            })[0]
+        }
         return constructor.call(*prepareArgs(
                 args, constructor.javaConstructor!!.parameterTypes).toTypedArray())
     }

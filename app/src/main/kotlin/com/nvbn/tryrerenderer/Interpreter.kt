@@ -1,6 +1,8 @@
 package com.nvbn.tryrerenderer
 
-class Interpreter {
+import org.jetbrains.anko.AnkoLogger
+
+class Interpreter: AnkoLogger {
     var pool = mapOf<String, Any?>()
 
     fun interprete(script: List<Instruction>): Map<String, Any?>  {
