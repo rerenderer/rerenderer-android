@@ -4,10 +4,10 @@ import org.jetbrains.anko.async
 import java.util.concurrent.Executors
 
 class Bus(
-        val onInterpreter: (request: InterpreteRequest) -> Unit,
+        val onInterpret: (request: InterpretRequest) -> Unit,
         val execute: (js: String) -> Unit
 ) {
-    data class InterpreteRequest(val script: List<Instruction>,
+    data class InterpretRequest(val script: List<Instruction>,
                                  val root: Var.Ref,
                                  val scale: Boolean)
 
@@ -15,9 +15,9 @@ class Bus(
 
     val readExecutor = Executors.newFixedThreadPool(4)
 
-    fun interprete(data: String) = async(readExecutor) {
-        val request = parser.decode<InterpreteRequest>(data)
-        onInterpreter(request)
+    fun interpret(data: String) = async(readExecutor) {
+        val request = parser.decode<InterpretRequest>(data)
+        onInterpret(request)
     }
 
     fun sendEvent(event: Event) {

@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 class Executor(
         val ctx: Context, val cljsSideUrl: String,
         val view: FullscreenView) : AnkoLogger {
-    val bus = Bus({ interprete(it) }, { execute(it) })
+    val bus = Bus({ interpret(it) }, { execute(it) })
     val interpreter = Interpreter()
     val webView = ctx.webView {
         setWillNotDraw(true)
@@ -30,10 +30,10 @@ class Executor(
         webView.loadUrl("javascript:$code")
     }
 
-    fun interprete(request: Bus.InterpreteRequest) {
+    fun interpret(request: Bus.InterpretRequest) {
         async(renderExecutor) {
             try {
-                val pool = interpreter.interprete(request.script)
+                val pool = interpreter.interpret(request.script)
                 val rootBitmap = pool[request.root.id] as Bitmap
                 view.render(rootBitmap, request.scale)
             } catch (e: Exception) {

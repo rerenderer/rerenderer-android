@@ -16,7 +16,7 @@ class InterpreterTest : AndroidTestCase() {
                 Instruction.Free(Var.Ref("a")),
                 Instruction.Free(Var.Ref("b"))
         )
-        val pool = Interpreter().interprete(script)
+        val pool = Interpreter().interpret(script)
 
         assertEquals(TestCls::class, pool["c"])
         assertTrue(pool["d"] is TestCls)

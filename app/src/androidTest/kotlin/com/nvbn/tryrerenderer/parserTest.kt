@@ -130,8 +130,8 @@ class ParserTest : AndroidTestCase() {
         assertEquals(free.ref.id, "unned")
     }
 
-    fun testParseInterpreteRequest() {
-        val request = parser.decode<Bus.InterpreteRequest>(
+    fun testParseInterpretRequest() {
+        val request = parser.decode<Bus.InterpretRequest>(
                 "{\"scale\": true, \"root\": [\"ref\", \"test\"], \"script\": []}")
 
         assertEquals(listOf<Instruction>(), request.script)

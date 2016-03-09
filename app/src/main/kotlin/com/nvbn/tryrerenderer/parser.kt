@@ -69,9 +69,9 @@ object parser: AnkoLogger {
             .registerTypeAdapter<List<Var>> {
                 deserialize { it.json.array.map { gson.fromJson<Var>(it) } }
             }
-            .registerTypeAdapter<Bus.InterpreteRequest> {
+            .registerTypeAdapter<Bus.InterpretRequest> {
                 deserialize {
-                    Bus.InterpreteRequest(
+                    Bus.InterpretRequest(
                             gson.fromJson<List<Instruction>>(it.json["script"]),
                             gson.fromJson<Var>(it.json["root"]) as Var.Ref,
                             it.json["scale"].bool)

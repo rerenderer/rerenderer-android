@@ -29,85 +29,85 @@ class VarStaticTest : AndroidTestCase() {
 }
 
 class NewTest : AndroidTestCase() {
-    fun testInterprete() {
+    fun testInterpret() {
         val instruction = Instruction.New(
                 Var.Ref("x"), Var.Ref("y"), listOf())
         val pool = mapOf("y" to TestCls::class)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertTrue(resultPool["x"] is TestCls)
     }
 
-    fun testInterpreteWithArgs() {
+    fun testInterpretWithArgs() {
         val instruction = Instruction.New(
                 Var.Ref("x"), Var.Ref("y"), listOf(Var.Val("value")))
         val pool = mapOf("y" to TestCls::class)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertTrue(resultPool["x"] is TestCls)
         assertEquals("value", (resultPool["x"] as TestCls).attr)
     }
 }
 
 class CallTest : AndroidTestCase() {
-    fun testInterprete() {
+    fun testInterpret() {
         val instruction = Instruction.Call(
                 Var.Ref("x"), Var.Ref("y"), "method",
                 listOf(Var.Ref("z"), Var.Val(5)))
         val pool = mapOf(
                 "y" to TestCls(), "z" to 12)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(17, resultPool["x"])
     }
 
-    fun testInterpreteStatic() {
+    fun testInterpretStatic() {
         val instruction = Instruction.Call(
                 Var.Ref("x"), Var.Ref("y"), "staticMethod",
                 listOf(Var.Ref("z"), Var.Val(5)))
         val pool = mapOf(
                 "y" to TestCls::class, "z" to 12)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(17, resultPool["x"])
     }
 }
 
 class GetTest : AndroidTestCase() {
-    fun testInterprete() {
+    fun testInterpret() {
         val instruction = Instruction.Get(
                 Var.Ref("x"), Var.Ref("y"), "attr")
         val pool = mapOf("y" to TestCls())
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], "test")
     }
 
-    fun testInterpreteStatic() {
+    fun testInterpretStatic() {
         val instruction = Instruction.Get(
                 Var.Ref("x"), Var.Ref("y"), "staticAttr")
         val pool = mapOf("y" to TestCls::class)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], "static-test")
     }
 
-    fun testInterpreteClass() {
+    fun testInterpretClass() {
         val instruction = Instruction.Get(
                 Var.Ref("x"), Var.Ref("y"), "TestCls")
         val pool = mapOf("y" to reflection.Static("com.nvbn.tryrerenderer"))
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], TestCls::class)
     }
 
-    fun testInterpreteIntermediate() {
+    fun testInterpretIntermediate() {
         val instruction = Instruction.Get(
                 Var.Ref("x"), Var.Ref("y"), "tryrerenderer")
         val pool = mapOf("y" to reflection.Static("com.nvbn"))
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], reflection.Static("com.nvbn.tryrerenderer"))
     }
 }
 
 class FreeTest : AndroidTestCase() {
-    fun testInterprete() {
+    fun testInterpret() {
         val instruction = Instruction.Free(Var.Ref("x"))
         val pool = mapOf("x" to 23)
-        val resultPool = instruction.interprete(pool)
+        val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], null)
     }
 }

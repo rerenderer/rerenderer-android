@@ -25,7 +25,7 @@ sealed class Var {
 }
 
 sealed class Instruction {
-    abstract fun interprete(pool: Map<String, Any?>): Map<String, Any?>
+    abstract fun interpret(pool: Map<String, Any?>): Map<String, Any?>
 
     fun extractVars(vars: List<Var>, pool: Map<String, Any?>) = vars.map {
         it.extractVar(pool)!!
@@ -37,7 +37,7 @@ sealed class Instruction {
 
     class New(val resultRef: Var.Ref, val cls: Var,
               val args: List<Var>) : Instruction() {
-        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+        override fun interpret(pool: Map<String, Any?>): Map<String, Any?> {
             val cls = cls.extractVar(pool)
             if (cls !is KClass<*>)
                 throw NotClassException(cls)
@@ -51,7 +51,7 @@ sealed class Instruction {
 
     class Call(val resultRef: Var.Ref, val obj: Var,
                val method: String, val args: List<Var>) : Instruction() {
-        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+        override fun interpret(pool: Map<String, Any?>): Map<String, Any?> {
             val obj = obj.extractVar(pool)
             val args = extractVars(args, pool)
 
@@ -69,7 +69,7 @@ sealed class Instruction {
 
     class Get(val resultRef: Var.Ref, val obj: Var,
               val attr: String) : Instruction() {
-        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> {
+        override fun interpret(pool: Map<String, Any?>): Map<String, Any?> {
             val obj = obj.extractVar(pool)
 
             val result = when (obj) {
@@ -86,7 +86,7 @@ sealed class Instruction {
     }
 
     class Free(val ref: Var.Ref) : Instruction() {
-        override fun interprete(pool: Map<String, Any?>): Map<String, Any?> =
+        override fun interpret(pool: Map<String, Any?>): Map<String, Any?> =
                 pool.plus(ref.id to null)
 
         override fun toString() = "[:free $ref]"

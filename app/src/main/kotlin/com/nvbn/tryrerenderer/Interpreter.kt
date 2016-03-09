@@ -5,9 +5,9 @@ import org.jetbrains.anko.AnkoLogger
 class Interpreter: AnkoLogger {
     var pool = mapOf<String, Any?>()
 
-    fun interprete(script: List<Instruction>): Map<String, Any?>  {
+    fun interpret(script: List<Instruction>): Map<String, Any?>  {
         pool = script.fold(pool) { pool, instruction ->
-            instruction.interprete(pool)
+            instruction.interpret(pool)
         }
         return pool
     }
