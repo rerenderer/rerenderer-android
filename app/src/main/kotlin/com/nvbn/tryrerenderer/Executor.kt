@@ -3,9 +3,8 @@ package com.nvbn.tryrerenderer
 import android.content.Context
 import android.graphics.Bitmap
 import android.webkit.WebSettings
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.error
-import org.jetbrains.anko.webView
+import org.jetbrains.anko.*
+import java.util.concurrent.Executors
 
 class Executor(
         val ctx: Context, val cljsSideUrl: String,
@@ -21,6 +20,7 @@ class Executor(
         addJavascriptInterface(bus, "android")
         loadUrl(cljsSideUrl)
     }
+    val renderExecutor = Executors.newSingleThreadExecutor()
 
     init {
         view.bus = bus
@@ -31,12 +31,14 @@ class Executor(
     }
 
     fun interprete(request: Bus.InterpreteRequest) {
-        try {
-            val pool = interpreter.interprete(request.script)
-            val rootBitmap = pool[request.root.id] as Bitmap
-            view.render(rootBitmap, request.scale)
-        } catch (e: Exception) {
-            error("Interpretation failed", e)
+        async(renderExecutor) {
+            try {
+                val pool = interpreter.interprete(request.script)
+                val rootBitmap = pool[request.root.id] as Bitmap
+                view.render(rootBitmap, request.scale)
+            } catch (e: Exception) {
+                error("Interpretation failed", e)
+            }
         }
     }
 }

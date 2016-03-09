@@ -1,5 +1,8 @@
 package com.nvbn.tryrerenderer
 
+import org.jetbrains.anko.async
+import java.util.concurrent.Executors
+
 class Bus(
         val onInterpreter: (request: InterpreteRequest) -> Unit,
         val execute: (js: String) -> Unit
@@ -10,9 +13,13 @@ class Bus(
 
     data class Event(val name: String, val data: Map<String, Any>)
 
+    val readExecutor = Executors.newFixedThreadPool(4)
+
     fun interprete(data: String) {
-        val request = parser.decode<InterpreteRequest>(data)
-        onInterpreter(request)
+        async(readExecutor) {
+            val request = parser.decode<InterpreteRequest>(data)
+            onInterpreter(request)
+        }
     }
 
     fun sendEvent(event: Event) {
