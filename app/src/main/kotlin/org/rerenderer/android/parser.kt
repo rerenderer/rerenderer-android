@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import com.github.salomonbrys.kotson.*
 import com.google.gson.GsonBuilder

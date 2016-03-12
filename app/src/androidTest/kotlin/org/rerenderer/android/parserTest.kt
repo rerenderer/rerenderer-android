@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import android.test.AndroidTestCase
 import com.github.salomonbrys.kotson.fromJson

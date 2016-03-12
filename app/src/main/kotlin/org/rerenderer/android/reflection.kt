@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import kotlin.reflect.*
 import kotlin.reflect.jvm.javaConstructor

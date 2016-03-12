@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import android.test.AndroidTestCase
 
@@ -89,17 +89,17 @@ class GetTest : AndroidTestCase() {
     fun testInterpretClass() {
         val instruction = Instruction.Get(
                 Var.Ref("x"), Var.Ref("y"), "TestCls")
-        val pool = mapOf("y" to reflection.Static("com.nvbn.tryrerenderer"))
+        val pool = mapOf("y" to reflection.Static("org.rerenderer.android"))
         val resultPool = instruction.interpret(pool)
         assertEquals(resultPool["x"], TestCls::class)
     }
 
     fun testInterpretIntermediate() {
         val instruction = Instruction.Get(
-                Var.Ref("x"), Var.Ref("y"), "tryrerenderer")
-        val pool = mapOf("y" to reflection.Static("com.nvbn"))
+                Var.Ref("x"), Var.Ref("y"), "android")
+        val pool = mapOf("y" to reflection.Static("org.rerenderer"))
         val resultPool = instruction.interpret(pool)
-        assertEquals(resultPool["x"], reflection.Static("com.nvbn.tryrerenderer"))
+        assertEquals(resultPool["x"], reflection.Static("org.rerenderer.android"))
     }
 }
 

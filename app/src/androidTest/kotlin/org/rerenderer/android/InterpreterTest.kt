@@ -1,12 +1,12 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import android.test.AndroidTestCase
 
 class InterpreterTest : AndroidTestCase() {
     fun testInterprete() {
         val script = listOf(
-                Instruction.Get(Var.Ref("a"), Var.Static("com"), "nvbn"),
-                Instruction.Get(Var.Ref("b"), Var.Ref("a"), "tryrerenderer"),
+                Instruction.Get(Var.Ref("a"), Var.Static("org"), "rerenderer"),
+                Instruction.Get(Var.Ref("b"), Var.Ref("a"), "android"),
                 Instruction.Get(Var.Ref("c"), Var.Ref("b"), "TestCls"),
                 Instruction.New(Var.Ref("d"), Var.Ref("c"), listOf(Var.Val("arg"))),
                 Instruction.Call(Var.Ref("e"), Var.Ref("d"), "method", listOf(Var.Val(1), Var.Val(2))),

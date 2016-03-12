@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import android.graphics.Bitmap
 import android.test.AndroidTestCase
@@ -11,13 +11,13 @@ class ReflectionTest : AndroidTestCase() {
     }
 
     fun testGetStaticIntermediate() {
-        val value = reflection.get(reflection.Static("com.nvbn"), "tryrerenderer")
-        assertEquals(reflection.Static("com.nvbn.tryrerenderer"), value)
+        val value = reflection.get(reflection.Static("org.rerenderer"), "android")
+        assertEquals(reflection.Static("org.rerenderer.android"), value)
     }
 
     fun testGetClass() {
         val value = reflection.get(
-                reflection.Static("com.nvbn.tryrerenderer"), "TestCls")
+                reflection.Static("org.rerenderer.android"), "TestCls")
         assertEquals(TestCls::class, value)
     }
 

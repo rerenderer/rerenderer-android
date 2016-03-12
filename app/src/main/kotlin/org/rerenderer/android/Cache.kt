@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 class Cache<T> {
     val cache = mutableMapOf<String, T>()

@@ -1,4 +1,4 @@
-package com.nvbn.tryrerenderer;
+package org.rerenderer.android;
 
 public class TestCls {
     public TestCls() {}

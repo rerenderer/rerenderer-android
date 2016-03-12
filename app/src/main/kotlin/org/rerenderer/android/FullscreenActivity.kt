@@ -1,21 +1,18 @@
-package com.nvbn.tryrerenderer
+package org.rerenderer.android
 
 import android.app.Activity
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
-import android.widget.FrameLayout
 import org.jetbrains.anko.*
 
 
-class FullscreenActivity : Activity(), AnkoLogger {
+open class FullscreenActivity : Activity(), AnkoLogger {
+    open val url = "file:///android_asset/index.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val view = FullscreenView(ctx)
         setContentView(view)
 
-        val executor = Executor(
-                ctx, "http://192.168.0.105:3449", view)
+        val executor = Executor(ctx, url, view)
     }
 }
