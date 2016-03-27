@@ -5,7 +5,7 @@ import android.os.Bundle
 import org.jetbrains.anko.*
 
 
-open class FullscreenActivity : Activity(), AnkoLogger {
+open class RerendererActivity : Activity(), AnkoLogger {
     open val url = "file:///android_asset/index.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
