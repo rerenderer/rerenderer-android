@@ -1,4 +1,4 @@
-package org.rerenderer.android
+package org.rerenderer.android.render
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,9 +6,8 @@ import android.graphics.Paint
 import android.view.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
-import org.jetbrains.anko.info
+import org.rerenderer.android.events
 import org.rerenderer.android.primitives.BasePrimitive
-import org.rerenderer.android.render.Renderer
 
 class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
         View.OnTouchListener, AnkoLogger {
@@ -18,8 +17,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     val paint = Paint()
     var surfaceWidth = 0
     var surfaceHeight = 0
-    var bus: Bus? = null
-    val renderer = Renderer()
+    val renderer = Renderer(paint)
 
     init {
         holder.addCallback(this)
@@ -29,7 +27,6 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         debug("Surface created")
-        RerendererLoader.context = context
         render(lastRoot, scale)
     }
 
@@ -37,7 +34,8 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         debug("Surface changed")
         surfaceWidth = width
         surfaceHeight = height
-        bus?.updateInformation(width, height)
+        events.updatePlatformInformation(
+                events.PlatformInformation(width, height))
         render(lastRoot, scale)
     }
 
@@ -69,7 +67,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        bus?.sendEvent(Bus.Event("click", mapOf(
+        events.platformEvent(events.PlatformEvent("click", mapOf(
                 "x" to event.x,
                 "y" to event.y
         )))

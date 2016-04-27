@@ -6,8 +6,7 @@ import android.graphics.Paint
 class Rectangle(props: Map<String, Any?>,
                 childs: List<BasePrimitive>,
                 path: String) : BasePrimitive(props, childs, path) {
-    override fun render(canvas: Canvas) {
-        val paint = Paint()
+    override fun render(canvas: Canvas, paint: Paint) {
         if (props["color"] is List<*>) {
             val color = (props["color"] as List<Any>).map {
                 (it as Double).toInt()

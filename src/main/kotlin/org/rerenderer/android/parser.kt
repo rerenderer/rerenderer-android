@@ -40,7 +40,7 @@ object parser : AnkoLogger {
                     it.json.array.map { gson.fromJson<BasePrimitive>(it) }
                 }
             }
-            .registerTypeAdapter<Bus.Event> {
+            .registerTypeAdapter<events.PlatformEvent> {
                 serialize {
                     val obj = jsonObject("event" to it.src.name)
                     for ((key, value) in it.src.data) {
@@ -49,11 +49,11 @@ object parser : AnkoLogger {
                     obj
                 }
             }
-            .registerTypeAdapter<Bus.RenderRequest> {
+            .registerTypeAdapter<events.RenderRequest> {
                 deserialize {
                     val tree = it.json.obj.get("tree")
                     val scale = it.json.obj.get("scale").asBoolean
-                    Bus.RenderRequest(gson.fromJson(tree), scale)
+                    events.RenderRequest(gson.fromJson(tree), scale)
                 }
             }
             .create()

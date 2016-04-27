@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import org.rerenderer.android.primitives.BasePrimitive
 
-class Renderer {
+class Renderer(val paint: Paint) {
     val cache = BitmapCache()
 
     fun renderPrimitive(primitive: BasePrimitive): Bitmap = cache.get(primitive.path) {
@@ -14,14 +14,14 @@ class Renderer {
                 (primitive.props["height"] as Double).toInt(),
                 Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        primitive.render(canvas)
+        primitive.render(canvas, paint)
         for (child in primitive.childs) {
             val childBitmap = renderPrimitive(child)
             canvas.drawBitmap(
                     childBitmap,
                     (child.props["x"] as Double).toFloat(),
                     (child.props["y"] as Double).toFloat(),
-                    Paint())
+                    paint)
         }
         bitmap
     }

@@ -21,12 +21,6 @@ class BitmapCache {
             return action()
         } finally {
             cache = cache.filterNot({ it.key in cache.keys })
-//
-//            for (key in cache.keys) {
-//                if (key !in lastKeys) {
-//                    cache.remove(key)
-//                }
-//            }
         }
 
     }
