@@ -5,15 +5,10 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.Gson
 import org.jetbrains.anko.AnkoLogger
+import org.rerenderer.android.primitives.BasePrimitive
+import org.rerenderer.android.primitives.registry
 
-
-object parser: AnkoLogger {
-    class NotAllowedVarException(variable: Any) : Exception(
-            "Not allowed variable $variable")
-
-    class NotAllowedInstructionException(instruction: Any) : Exception(
-            "Not allowed instruction $instruction")
-
+object parser : AnkoLogger {
     val gson: Gson = makeParser()
 
     fun toJsonElement(x: Any?): JsonElement {
@@ -31,50 +26,18 @@ object parser: AnkoLogger {
     }
 
     fun makeParser() = GsonBuilder()
-            .registerTypeAdapter<Instruction> {
+            .registerTypeAdapter<BasePrimitive> {
                 deserialize {
-                    when (it.json.array[0].asString) {
-                        "new" -> Instruction.New(
-                                gson.fromJson<Var>(it.json.array[1]) as Var.Ref,
-                                gson.fromJson<Var>(it.json.array[2]),
-                                gson.fromJson<List<Var>>(it.json.array[3]))
-                        "call" -> Instruction.Call(
-                                gson.fromJson<Var>(it.json.array[1]) as Var.Ref,
-                                gson.fromJson<Var>(it.json.array[2]),
-                                it.json.array[3].asString,
-                                gson.fromJson<List<Var>>(it.json.array[4]))
-                        "get" -> Instruction.Get(
-                                gson.fromJson<Var>(it.json.array[1]) as Var.Ref,
-                                gson.fromJson<Var>(it.json.array[2]),
-                                it.json.array[3].asString)
-                        "free" -> Instruction.Free(
-                                gson.fromJson<Var>(it.json.array[1]) as Var.Ref)
-                        else -> throw NotAllowedInstructionException(it)
-                    }
+                    val constructor = registry[it.json.array[0].asString]
+                    constructor!!(
+                            it.json.array[1].asMap,
+                            gson.fromJson(it.json.array[2]),
+                            it.json.array[3].asString)
                 }
             }
-            .registerTypeAdapter<List<Instruction>> {
-                deserialize { it.json.array.map { gson.fromJson<Instruction>(it) } }
-            }
-            .registerTypeAdapter<Var> {
+            .registerTypeAdapter<List<BasePrimitive>> {
                 deserialize {
-                    when (it.json.array[0].asString) {
-                        "ref" -> Var.Ref(it.json.array[1].asString)
-                        "val" -> Var.Val(it.json.array[1].asAny)
-                        "static" -> Var.Static(it.json.array[1].asString)
-                        else -> throw NotAllowedVarException(it)
-                    }
-                }
-            }
-            .registerTypeAdapter<List<Var>> {
-                deserialize { it.json.array.map { gson.fromJson<Var>(it) } }
-            }
-            .registerTypeAdapter<Bus.InterpretRequest> {
-                deserialize {
-                    Bus.InterpretRequest(
-                            gson.fromJson<List<Instruction>>(it.json["script"]),
-                            gson.fromJson<Var>(it.json["root"]) as Var.Ref,
-                            it.json["scale"].bool)
+                    it.json.array.map { gson.fromJson<BasePrimitive>(it) }
                 }
             }
             .registerTypeAdapter<Bus.Event> {
@@ -86,12 +49,16 @@ object parser: AnkoLogger {
                     obj
                 }
             }
+            .registerTypeAdapter<Bus.RenderRequest> {
+                deserialize {
+                    val tree = it.json.obj.get("tree")
+                    val scale = it.json.obj.get("scale").asBoolean
+                    Bus.RenderRequest(gson.fromJson(tree), scale)
+                }
+            }
             .create()
 
-    val JsonElement.asAny: Any? get() {
-        if (isJsonNull)
-            return null
-
+    val JsonElement.asPrimitive: Any? get() {
         val primitive = asJsonPrimitive
         return when {
             primitive.isString -> primitive.asString
@@ -102,7 +69,23 @@ object parser: AnkoLogger {
         }
     }
 
+    val JsonElement.asPrimitiveList: List<Any?> get() = asJsonArray.map {
+        it.asPrimitive
+    }
+
+    val JsonElement.asMap: Map<String, Any?> get() = if (isJsonNull) {
+        mapOf()
+    } else {
+        asJsonObject.toMap().mapValues {
+            when {
+                it.value.isJsonPrimitive -> it.value.asPrimitive
+                it.value.isJsonArray -> it.value.asPrimitiveList
+                else -> throw Exception()
+            }
+        }
+    }
+
     inline fun <reified T : Any> decode(code: String): T = gson.fromJson<T>(code)
 
-    inline fun <reified T: Any> encode(data: T): String = gson.typedToJson(data)
+    inline fun <reified T : Any> encode(data: T): String = gson.typedToJson(data)
 }

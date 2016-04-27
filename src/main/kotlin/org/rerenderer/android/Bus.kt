@@ -1,23 +1,25 @@
 package org.rerenderer.android
 
+import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
+import org.jetbrains.anko.info
+import org.jetbrains.anko.warn
+import org.rerenderer.android.primitives.BasePrimitive
 import java.util.concurrent.Executors
 
 class Bus(
-        val onInterpret: (request: InterpretRequest) -> Unit,
+        val renderFn: (BasePrimitive, Boolean) -> Unit,
         val execute: (js: String) -> Unit
-) {
-    data class InterpretRequest(val script: List<Instruction>,
-                                 val root: Var.Ref,
-                                 val scale: Boolean)
-
+): AnkoLogger {
     data class Event(val name: String, val data: Map<String, Any>)
 
-    val readExecutor = Executors.newFixedThreadPool(4)
+    data class RenderRequest(val tree: BasePrimitive, val scale: Boolean)
 
-    fun interpret(data: String) = async(readExecutor) {
-        val request = parser.decode<InterpretRequest>(data)
-        onInterpret(request)
+    val readExecutor = Executors.newFixedThreadPool(2)
+
+    fun render(data: String) = async(readExecutor) {
+        val request = parser.decode<RenderRequest>(data)
+        renderFn(request.tree, request.scale)
     }
 
     fun sendEvent(event: Event) {
@@ -26,6 +28,10 @@ class Bus(
     }
 
     fun updateInformation(width: Int, height: Int) {
-        execute("androidUpdateInformation($width, $height);")
+        try {
+            execute("androidUpdateInformation($width, $height);")
+        } catch (e: Exception) {
+            warn("Can't update information: $e")
+        }
     }
 }

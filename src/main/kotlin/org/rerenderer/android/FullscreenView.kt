@@ -6,16 +6,20 @@ import android.graphics.Paint
 import android.view.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
+import org.jetbrains.anko.info
+import org.rerenderer.android.primitives.BasePrimitive
+import org.rerenderer.android.render.Renderer
 
 class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
         View.OnTouchListener, AnkoLogger {
 
-    var lastRoot: Bitmap? = null
+    var lastRoot: BasePrimitive? = null
     var scale = true
     val paint = Paint()
     var surfaceWidth = 0
     var surfaceHeight = 0
     var bus: Bus? = null
+    val renderer = Renderer()
 
     init {
         holder.addCallback(this)
@@ -40,9 +44,9 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
-    fun render(rootBitmap: Bitmap?, scale: Boolean) {
-        debug("Render $rootBitmap on $holder")
-        if (holder != null && rootBitmap != null) {
+    fun render(root: BasePrimitive?, scale: Boolean) {
+        if (holder != null && root != null) {
+            val rootBitmap = renderer.render(root)
             val canvas = holder!!.lockCanvas()
             try {
                 canvas.drawRect(
@@ -60,7 +64,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
                 holder!!.unlockCanvasAndPost(canvas)
             }
         }
-        lastRoot = rootBitmap
+        lastRoot = root
         this.scale = scale
     }
 

@@ -23,7 +23,7 @@ plugins {
 
 allprojects {
     group = 'org.rerenderer'
-    version = '0.3.6'
+    version = '0.3.7-SNAPSHOT'
 }
 
 apply plugin: 'com.android.library'
