@@ -1,4 +1,4 @@
-package org.rerenderer.android
+package org.rerenderer.android.render
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,16 +6,18 @@ import android.graphics.Paint
 import android.view.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
+import org.rerenderer.android.events
+import org.rerenderer.android.primitives.BasePrimitive
 
 class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
         View.OnTouchListener, AnkoLogger {
 
-    var lastRoot: Bitmap? = null
+    var lastRoot: BasePrimitive? = null
     var scale = true
     val paint = Paint()
     var surfaceWidth = 0
     var surfaceHeight = 0
-    var bus: Bus? = null
+    val renderer = Renderer(paint)
 
     init {
         holder.addCallback(this)
@@ -25,7 +27,6 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         debug("Surface created")
-        RerendererLoader.context = context
         render(lastRoot, scale)
     }
 
@@ -33,16 +34,16 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         debug("Surface changed")
         surfaceWidth = width
         surfaceHeight = height
-        bus?.updateInformation(width, height)
+        events.PlatformInformation(width, height).emit()
         render(lastRoot, scale)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
-    fun render(rootBitmap: Bitmap?, scale: Boolean) {
-        debug("Render $rootBitmap on $holder")
-        if (holder != null && rootBitmap != null) {
+    fun render(root: BasePrimitive?, scale: Boolean) {
+        if (holder != null && root != null) {
+            val rootBitmap = renderer.render(root)
             val canvas = holder!!.lockCanvas()
             try {
                 canvas.drawRect(
@@ -60,15 +61,15 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
                 holder!!.unlockCanvasAndPost(canvas)
             }
         }
-        lastRoot = rootBitmap
+        lastRoot = root
         this.scale = scale
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        bus?.sendEvent(Bus.Event("click", mapOf(
+        events.PlatformEvent("click", mapOf(
                 "x" to event.x,
                 "y" to event.y
-        )))
+        )).emit()
         return true
     }
 }

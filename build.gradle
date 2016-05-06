@@ -21,13 +21,18 @@ plugins {
     id "com.jfrog.bintray" version "1.6"
 }
 
+allprojects {
+    group = 'org.rerenderer'
+    version = '0.3.7-SNAPSHOT'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.anko:anko-sdk15:$anko_version"
     compile "com.github.salomonbrys.kotson:kotson:$kotson_version"
 
@@ -37,7 +42,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
     androidTestCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    androidTestCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     androidTestCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 
     repositories {
@@ -66,6 +70,7 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
         androidTest.java.srcDirs += 'src/androidTest/kotlin'
+        androidTests.assets.srcDirs += 'src/androidTest/assets'
     }
 
     packagingOptions {
@@ -82,6 +87,7 @@ bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
+    publications = ['MyPublication']
     pkg {
         repo = 'rerenderer'
         name = 'android'
@@ -90,19 +96,36 @@ bintray {
         vcsUrl = 'https://github.com/rerenderer/rerenderer-android.git'
 
         version {
-            name = '0.3.0'
+            name = project.version
             released = new Date()
         }
     }
 }
 
-//publishing {
-//    publications {
-//        Main(MavenPublication) {
-//            from components.kotlin
-//            groupId 'org.rerenderer'
-//            artifactId 'android'
-//            version '0.3.0'
-//        }
-//    }
-//}
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "source"
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            artifactId 'android'
+            artifact(sourceJar)
+            artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
+
+            // From https://stackoverflow.com/questions/24743562/gradle-not-including-dependencies-in-published-pom-xml
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.compile.allDependencies.each {
+                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                    dependencyNode.appendNode('groupId', it.group)
+                    dependencyNode.appendNode('artifactId', it.name)
+                    dependencyNode.appendNode('version', it.version)
+                }
+            }
+        }
+    }
+}
