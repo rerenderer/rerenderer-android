@@ -10,8 +10,8 @@ class Renderer(val paint: Paint) {
 
     fun renderPrimitive(primitive: BasePrimitive): Bitmap = cache.get(primitive.path) {
         val bitmap = Bitmap.createBitmap(
-                (primitive.props["width"] as Double).toInt(),
-                (primitive.props["height"] as Double).toInt(),
+                primitive.prop<Int>("width"),
+                primitive.prop<Int>("height"),
                 Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         primitive.render(canvas, paint)
@@ -19,8 +19,8 @@ class Renderer(val paint: Paint) {
             val childBitmap = renderPrimitive(child)
             canvas.drawBitmap(
                     childBitmap,
-                    (child.props["x"] as Double).toFloat(),
-                    (child.props["y"] as Double).toFloat(),
+                    child.prop<Float>("x"),
+                    child.prop<Float>("y"),
                     paint)
         }
         bitmap

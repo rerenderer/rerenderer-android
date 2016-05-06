@@ -5,6 +5,7 @@ import android.os.Bundle
 import org.jetbrains.anko.*
 import org.rerenderer.android.primitives.Image
 import org.rerenderer.android.primitives.Rectangle
+import org.rerenderer.android.primitives.Text
 import org.rerenderer.android.render.FullscreenView
 
 
@@ -23,23 +24,22 @@ open class RerendererActivity : Activity(), AnkoLogger {
     }
 
     fun initEvents() {
-        events {
-            render.on {
-                async() {
-                    view!!.render(it.tree, it.scale)
-                }
+        events.RenderRequest on {
+            async() {
+                view!!.render(it.tree, it.scale)
             }
-            platformEvent.on {
-                executor!!.sendPlatformEvent(it)
-            }
-            updatePlatformInformation.on {
-                executor!!.updatePlatformInformation(it.width, it.height)
-            }
+        }
+        events.PlatformEvent on {
+            executor!!.sendPlatformEvent(it)
+        }
+        events.PlatformInformation on {
+            executor!!.updatePlatformInformation(it.width, it.height)
         }
     }
 
     open fun registerPrimitives() {
         Rectangle.register()
         Image.register(ctx)
+        Text.register()
     }
 }

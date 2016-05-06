@@ -12,7 +12,7 @@ class Executor(
     object JSInterface {
         fun render(data: String) {
             val request = parser.decode<events.RenderRequest>(data)
-            events.render(request)
+            request.emit()
         }
     }
 

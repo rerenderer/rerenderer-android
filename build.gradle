@@ -33,7 +33,6 @@ apply plugin: 'maven-publish'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.anko:anko-sdk15:$anko_version"
     compile "com.github.salomonbrys.kotson:kotson:$kotson_version"
 
@@ -43,7 +42,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
     androidTestCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    androidTestCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     androidTestCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 
     repositories {
@@ -72,6 +70,7 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
         androidTest.java.srcDirs += 'src/androidTest/kotlin'
+        androidTests.assets.srcDirs += 'src/androidTest/assets'
     }
 
     packagingOptions {

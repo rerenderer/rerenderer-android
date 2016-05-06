@@ -2,15 +2,22 @@ package org.rerenderer.android
 
 import android.test.AndroidTestCase
 
-class eventsTest: AndroidTestCase() {
+data class TestEvent(val x: Int, val y: Int) {
+    companion object : Event<TestEvent>()
+
+    fun emit() = Companion.emit(this)
+}
+
+class eventsTest : AndroidTestCase() {
     fun testEvent() {
-        val event = Event<Int>()
-        var emited = false
-        event.on {
-            assertEquals(it, 10)
-            emited = true
+        var called = false
+        TestEvent on {
+            called = true
+            assertEquals(it.x, 10)
+            assertEquals(it.y, 50)
         }
-        event(10)
-        assertTrue(emited)
+
+        TestEvent(10, 50).emit()
+        assertTrue(called)
     }
 }

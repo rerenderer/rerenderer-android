@@ -2,32 +2,36 @@ package org.rerenderer.android
 
 import org.rerenderer.android.primitives.BasePrimitive
 
-class Event<T> {
-    val handlers = mutableListOf<(T) -> Unit>()
+open class Event<T> {
+    var handlers = listOf<(T) -> Unit>()
 
-    fun on(handler: (T) -> Unit) {
-        if (handler !in handlers) {
-            handlers.plusAssign(handler)
-        }
+    infix fun on(handler: (T) -> Unit) {
+        handlers += handler
     }
 
-    operator fun invoke(arg: T) {
-        for (subscriber in handlers) subscriber(arg)
+    fun emit(event: T) {
+        for (subscriber in handlers) {
+            subscriber(event)
+        }
     }
 }
 
 object events {
-    data class RenderRequest(val tree: BasePrimitive, val scale: Boolean)
+    data class RenderRequest(val tree: BasePrimitive, val scale: Boolean) {
+        companion object : Event<RenderRequest>()
 
-    val render = Event<RenderRequest>()
+        fun emit() = Companion.emit(this)
+    }
 
-    data class PlatformEvent(val name: String, val data: Map<String, Any>)
+    data class PlatformEvent(val name: String, val data: Map<String, Any>) {
+        companion object : Event<PlatformEvent>()
 
-    val platformEvent = Event<PlatformEvent>()
+        fun emit() = Companion.emit(this)
+    }
 
-    data class PlatformInformation(val width: Int, val height: Int)
+    data class PlatformInformation(val width: Int, val height: Int) {
+        companion object : Event<PlatformInformation>()
 
-    val updatePlatformInformation = Event<PlatformInformation>()
-
-    operator fun invoke(init: events.() -> Unit) = init()
+        fun emit() = Companion.emit(this)
+    }
 }

@@ -34,8 +34,7 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         debug("Surface changed")
         surfaceWidth = width
         surfaceHeight = height
-        events.updatePlatformInformation(
-                events.PlatformInformation(width, height))
+        events.PlatformInformation(width, height).emit()
         render(lastRoot, scale)
     }
 
@@ -67,10 +66,10 @@ class FullscreenView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        events.platformEvent(events.PlatformEvent("click", mapOf(
+        events.PlatformEvent("click", mapOf(
                 "x" to event.x,
                 "y" to event.y
-        )))
+        )).emit()
         return true
     }
 }
