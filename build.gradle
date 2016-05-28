@@ -10,7 +10,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.android.tools.build:gradle:2.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
@@ -23,7 +23,7 @@ plugins {
 
 allprojects {
     group = 'org.rerenderer'
-    version = '0.3.7-SNAPSHOT'
+    version = '0.4.1'
 }
 
 apply plugin: 'com.android.library'
@@ -38,7 +38,7 @@ dependencies {
 
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile "org.mockito:mockito-core:1.9.5"
-    androidTestCompile 'com.android.support:support-annotations:23.2.0'
+    androidTestCompile 'com.android.support:support-annotations:23.4.0'
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
     androidTestCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
